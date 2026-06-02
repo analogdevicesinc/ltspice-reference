@@ -41,4 +41,8 @@ Contributions welcome! This documentation aims to be:
 
 ## License
 
-Documentation content is provided as-is for educational purposes. LTspice is proprietary software from Analog Devices - see their website for licensing terms.
+This documentation is licensed under the [Apache License 2.0](LICENSE.md).
+
+Copyright 2026 Analog Devices, Inc.
+
+LTspice software itself is proprietary software from Analog Devices - see their [website](https://www.analog.com/ltspice) for software licensing terms.
