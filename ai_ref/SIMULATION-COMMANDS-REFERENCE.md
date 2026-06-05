@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Simulation Commands Reference
 
 Complete reference for all dot commands (simulation directives) in LTspice.

@@ -1,3 +1,5 @@
+[← Home](../README.md)
+
 # LTspice AI Reference
 
 LTspice documentation for AI assistants and users.

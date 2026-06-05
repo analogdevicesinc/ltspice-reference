@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Keyboard Shortcuts Reference
 
 *Last updated: 2026-05-14*  

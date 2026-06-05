@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Menu Reference
 
 *Last updated: 2026-05-14*  

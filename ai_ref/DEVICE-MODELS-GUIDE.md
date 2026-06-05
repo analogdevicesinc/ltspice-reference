@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Device Models Guide
 
 Using, creating, and integrating device models — MOSFETs, inductors, op-amps, transformers, and third-party models.

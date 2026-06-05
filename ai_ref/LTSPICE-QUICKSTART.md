@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Quickstart Guide
 
 Getting started with LTspice — installation, interface, command line, and first simulation.

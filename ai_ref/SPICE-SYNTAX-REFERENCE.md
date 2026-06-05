@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # SPICE Netlist Syntax Reference
 
 Complete reference for LTspice netlist structure, conventions, and syntax rules.
