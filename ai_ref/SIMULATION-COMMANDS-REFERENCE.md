@@ -1,3 +1,10 @@
+---
+layout: default
+title: Simulation Commands Reference
+parent: AI Reference
+nav_order: 6
+---
+
 # LTspice Simulation Commands Reference
 
 Complete reference for all dot commands (simulation directives) in LTspice.

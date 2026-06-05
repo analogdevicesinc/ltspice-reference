@@ -1,3 +1,10 @@
+---
+layout: default
+title: AI Reference
+nav_order: 2
+has_children: true
+---
+
 # LTspice AI Reference
 
 LTspice documentation for AI assistants and users.

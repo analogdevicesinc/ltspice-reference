@@ -1,3 +1,10 @@
+---
+layout: default
+title: Schematic Reference
+parent: AI Reference
+nav_order: 7
+---
+
 # LTspice Schematic Design and Modification Guide
 
 This guide documents the `.asc` schematic file format used by LTspice, based on observation of example schematics shipped with the application.

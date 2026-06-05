@@ -1,3 +1,10 @@
+---
+layout: default
+title: FAQ and Tips
+parent: AI Reference
+nav_order: 13
+---
+
 # LTspice FAQ and Tips
 
 Frequently asked questions, efficiency calculations, SMPS Bode plots, platform notes, and resources.

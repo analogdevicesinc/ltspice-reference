@@ -1,3 +1,10 @@
+---
+layout: default
+title: Troubleshooting Guide
+parent: AI Reference
+nav_order: 12
+---
+
 # LTspice Troubleshooting Guide
 
 Diagnosing and fixing convergence failures, performance issues, and common simulation problems.

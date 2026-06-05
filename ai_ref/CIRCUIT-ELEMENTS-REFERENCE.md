@@ -1,3 +1,10 @@
+---
+layout: default
+title: Circuit Elements Reference
+parent: AI Reference
+nav_order: 5
+---
+
 # LTspice Circuit Elements Reference
 
 Complete reference for all circuit element types in LTspice, including syntax, parameters, and models.

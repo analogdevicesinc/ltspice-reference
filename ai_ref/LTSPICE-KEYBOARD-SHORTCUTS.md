@@ -1,3 +1,10 @@
+---
+layout: default
+title: Keyboard Shortcuts
+parent: AI Reference
+nav_order: 2
+---
+
 # LTspice Keyboard Shortcuts Reference
 
 *Last updated: 2026-05-14*  

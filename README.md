@@ -1,3 +1,9 @@
+---
+layout: home
+title: Home
+nav_order: 1
+---
+
 # LTspice Reference Documentation
 
 Comprehensive documentation repository for LTspice - the free, high-performance SPICE simulator from Analog Devices.

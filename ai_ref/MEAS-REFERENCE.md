@@ -1,3 +1,10 @@
+---
+layout: default
+title: .MEAS Reference
+parent: AI Reference
+nav_order: 10
+---
+
 # LTspice .MEAS Statement Reference
 
 This document contains `.MEAS` statement examples for various simulation types.

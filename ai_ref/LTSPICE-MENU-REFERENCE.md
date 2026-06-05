@@ -1,3 +1,10 @@
+---
+layout: default
+title: Menu Reference
+parent: AI Reference
+nav_order: 3
+---
+
 # LTspice Menu Reference
 
 *Last updated: 2026-05-14*  

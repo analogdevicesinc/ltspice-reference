@@ -1,3 +1,10 @@
+---
+layout: default
+title: SPICE Syntax Reference
+parent: AI Reference
+nav_order: 4
+---
+
 # SPICE Netlist Syntax Reference
 
 Complete reference for LTspice netlist structure, conventions, and syntax rules.

@@ -1,3 +1,10 @@
+---
+layout: default
+title: Quickstart Guide
+parent: AI Reference
+nav_order: 1
+---
+
 # LTspice Quickstart Guide
 
 Getting started with LTspice — installation, interface, command line, and first simulation.

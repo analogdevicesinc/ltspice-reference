@@ -1,3 +1,10 @@
+---
+layout: default
+title: Waveform Viewer Guide
+parent: AI Reference
+nav_order: 8
+---
+
 # LTspice Waveform Viewer Guide
 
 Complete reference for viewing, analyzing, and exporting simulation results.
