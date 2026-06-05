@@ -1,6 +1,6 @@
 # LTspice Reference Documentation
 
-**[📖 View on GitHub](https://analogdevicesinc.github.io/ltspice-reference/)**
+**[📖 View on GitHub](https://github.com/analogdevicesinc/ltspice-reference)**
 
 Comprehensive documentation repository for LTspice - the free, high-performance SPICE simulator from Analog Devices.
 
