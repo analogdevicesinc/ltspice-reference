@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Troubleshooting Guide
 
 Diagnosing and fixing convergence failures, performance issues, and common simulation problems.

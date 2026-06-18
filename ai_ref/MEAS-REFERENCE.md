@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice .MEAS Statement Reference
 
 This document contains `.MEAS` statement examples for various simulation types.

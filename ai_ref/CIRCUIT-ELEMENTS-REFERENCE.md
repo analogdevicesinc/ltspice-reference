@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Circuit Elements Reference
 
 Complete reference for all circuit element types in LTspice, including syntax, parameters, and models.

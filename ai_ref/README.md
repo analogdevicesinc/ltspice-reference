@@ -1,3 +1,5 @@
+[← Home](../README.md)
+
 # LTspice AI Reference
 
 LTspice documentation for AI assistants and users.
@@ -86,6 +88,7 @@ LTspice.exe "C:\Projects\MyCircuit\filter.asc"
 | [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md) | .MEAS SQLite database schema, querying results |
 | [MEAS-REFERENCE.md](MEAS-REFERENCE.md) | .MEAS statement examples for AC, transient, and DC analysis |
 | [FAQ-AND-TIPS.md](FAQ-AND-TIPS.md) | Updates, license, Linux, efficiency, SMPS Bode plots |
+| [ADI-DESIGN-TOOLS-REFERENCE.md](ADI-DESIGN-TOOLS-REFERENCE.md) | ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics |
 
 ---
 

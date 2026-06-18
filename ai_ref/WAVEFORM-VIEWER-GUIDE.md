@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice Waveform Viewer Guide
 
 Complete reference for viewing, analyzing, and exporting simulation results.

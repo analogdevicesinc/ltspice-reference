@@ -1,3 +1,5 @@
+[← AI Reference](README.md)
+
 # LTspice FAQ and Tips
 
 Frequently asked questions, efficiency calculations, SMPS Bode plots, platform notes, and resources.
