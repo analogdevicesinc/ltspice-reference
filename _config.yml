@@ -6,6 +6,7 @@ description: >-
 url: https://analogdevicesinc.github.io
 baseurl: /ltspice-reference
 theme: minima            # native on GitHub Pages; its default layout head includes {% seo %} and the sitemap link
+header_pages: []         # suppress minima's auto nav (it lists every page with a title:); titles still drive SEO
 lang: en
 plugins:
   - jekyll-seo-tag       # emits <title>, meta description, Open Graph, Twitter cards, JSON-LD
