@@ -1052,35 +1052,6 @@ Complete reference for all circuit element types in LTspice, including syntax, p
 
 ---
 
-## Table of Contents
-
-1. [Element Overview](#element-overview)
-2. [R — Resistor](#r--resistor)
-3. [C — Capacitor](#c--capacitor)
-4. [L — Inductor](#l--inductor)
-5. [D — Diode](#d--diode)
-6. [Q — Bipolar Transistor](#q--bipolar-transistor)
-7. [M — MOSFET](#m--mosfet)
-8. [J — JFET](#j--jfet)
-9. [Z — MESFET and IGBT](#z--mesfet-and-igbt)
-10. [V — Voltage Source](#v--voltage-source)
-11. [I — Current Source](#i--current-source)
-12. [E — Voltage-Dependent Voltage Source](#e--voltage-dependent-voltage-source)
-13. [G — Voltage-Dependent Current Source](#g--voltage-dependent-current-source)
-14. [H — Current-Dependent Voltage Source](#h--current-dependent-voltage-source)
-15. [F — Current-Dependent Current Source](#f--current-dependent-current-source)
-16. [S — Voltage-Controlled Switch](#s--voltage-controlled-switch)
-17. [W — Current-Controlled Switch](#w--current-controlled-switch)
-18. [K — Mutual Inductance](#k--mutual-inductance)
-19. [T — Lossless Transmission Line](#t--lossless-transmission-line)
-20. [O — Lossy Transmission Line](#o--lossy-transmission-line)
-21. [U — Uniform RC-Line](#u--uniform-rc-line)
-22. [B — Behavioral Source](#b--behavioral-source)
-23. [A — Special Functions](#a--special-functions)
-24. [X — Subcircuit](#x--subcircuit)
-
----
-
 ## Element Overview
 
 The first character of a netlist line determines the element type. Some elements use **flags** as parameters — a flag is active if present, or you can assign a value (>=0.5 = on, <0.5 = off).
@@ -1891,47 +1862,6 @@ Complete reference for all dot commands (simulation directives) in LTspice.
 
 ---
 
-## Table of Contents
-
-1. [Analysis Types](#analysis-types)
-   - [.TRAN — Transient Analysis](#tran--transient-analysis)
-   - [.AC — AC Analysis](#ac--ac-analysis)
-   - [.DC — DC Sweep](#dc--dc-sweep)
-   - [.OP — DC Operating Point](#op--dc-operating-point)
-   - [.NOISE — Noise Analysis](#noise--noise-analysis)
-   - [.TF — Transfer Function](#tf--transfer-function)
-   - [.FRA — Frequency Response Analysis](#fra--frequency-response-analysis)
-   - [.FOUR — Fourier Analysis](#four--fourier-analysis)
-2. [Measurement & Output](#measurement--output)
-   - [.MEASURE — User-Defined Measurements](#measure--user-defined-measurements)
-   - [.SAVE — Limit Saved Data](#save--limit-saved-data)
-   - [.WAVE — Output WAV File](#wave--output-wav-file)
-   - [.FOUR — Fourier Components](#four--fourier-analysis)
-3. [Parameter Control](#parameter-control)
-   - [.PARAM — User-Defined Parameters](#param--user-defined-parameters)
-   - [.FUNC — User-Defined Functions](#func--user-defined-functions)
-   - [.STEP — Parameter Sweeps](#step--parameter-sweeps)
-   - [.TEMP — Temperature Sweeps](#temp--temperature-sweeps)
-4. [Simulator Configuration](#simulator-configuration)
-   - [.OPTIONS — Simulator Options](#options--simulator-options)
-5. [Circuit Structure](#circuit-structure)
-   - [.SUBCKT / .ENDS — Subcircuit Definition](#subckt--ends--subcircuit-definition)
-   - [.MODEL — SPICE Model Definition](#model--spice-model-definition)
-   - [.INCLUDE — Include File](#include--include-file)
-   - [.LIB — Include Library](#lib--include-library)
-   - [.GLOBAL — Global Nodes](#global--global-nodes)
-   - [.END — End of Netlist](#end--end-of-netlist)
-6. [State Management](#state-management)
-   - [.SAVESTATE — Save Circuit State](#savestate--save-circuit-state)
-   - [.LOADSTATE — Load Circuit State](#loadstate--load-circuit-state)
-   - [.SAVEBIAS — Save Operating Point](#savebias--save-operating-point)
-7. [Advanced](#advanced)
-   - [.MACHINE — State Machine](#machine--state-machine)
-   - [.NET — Network Parameters](#net--network-parameters)
-   - [.BACKANNO — Pin Annotation](#backanno--pin-annotation)
-
----
-
 ## Analysis Types
 
 ### .TRAN — Transient Analysis
@@ -2651,23 +2581,6 @@ Diagnosing and fixing convergence failures, performance issues, and common simul
 
 ---
 
-## Table of Contents
-
-1. [Diagnostic Information Collection](#diagnostic-information-collection)
-2. [Convergence Problems — Symptoms](#convergence-problems--symptoms)
-3. [Common Sources of Convergence Failure](#common-sources-of-convergence-failure)
-4. [Debugging with Convergence Reports](#debugging-with-convergence-reports)
-5. [Fix the Circuit](#fix-the-circuit)
-6. [Improve DC Operating Point Convergence](#improve-dc-operating-point-convergence)
-7. [Improve Transient Convergence](#improve-transient-convergence)
-8. [Integration Methods](#integration-methods)
-9. [Use Initial Conditions (UIC)](#use-initial-conditions-uic)
-10. [Waveform Compression](#waveform-compression)
-11. [Steady-State Detection](#steady-state-detection)
-12. [Memory and Performance](#memory-and-performance)
-
----
-
 ## Diagnostic Information Collection
 
 When troubleshooting LTspice issues (especially FRA, convergence, or model-related problems), collect this diagnostic information first:
@@ -3042,24 +2955,6 @@ During transient analysis, press the **`0` key** to discard past waveform data a
 
 This guide documents the `.asc` schematic file format used by LTspice, based on observation of example schematics shipped with the application.
 
----
-
-## Table of Contents
-
-1. [ASC File Format Overview](#asc-file-format-overview)
-   - [File Encoding — Critical](#file-encoding--critical)
-2. [Coordinate System and Grid](#coordinate-system-and-grid)
-3. [Wires](#wires)
-4. [Net Labels (Flags)](#net-labels-flags)
-5. [Components (Symbols)](#components-symbols)
-6. [Component Attributes](#component-attributes)
-7. [Text and SPICE Directives](#text-and-spice-directives)
-8. [Graphic Elements](#graphic-elements)
-9. [Rotation and Mirroring](#rotation-and-mirroring)
-10. [I/O Pins (Hierarchical Designs)](#io-pins-hierarchical-designs)
-11. [Common SPICE Analysis Commands](#common-spice-analysis-commands)
-12. [Design Best Practices](#design-best-practices)
-13. [Example Walkthrough](#example-walkthrough)
 ---
 
 ## ASC File Format Overview
@@ -3802,22 +3697,6 @@ Complete reference for viewing, analyzing, and exporting simulation results.
 
 ---
 
-## Table of Contents
-
-1. [Trace Selection](#trace-selection)
-2. [Zooming and Navigation](#zooming-and-navigation)
-3. [Waveform Arithmetic](#waveform-arithmetic)
-4. [User-Defined Functions](#user-defined-functions)
-5. [Axis Control](#axis-control)
-6. [Plot Panes](#plot-panes)
-7. [Cursors](#cursors)
-8. [Color Control](#color-control)
-9. [Plot Configurations](#plot-configurations)
-10. [Fast Access File Format](#fast-access-file-format)
-11. [Exporting Data](#exporting-data)
-
----
-
 ## Trace Selection
 
 ### Probing from Schematic
@@ -4113,17 +3992,6 @@ Helmut Sennewald's free utility (http://groups.io/g/LTspice) supports data manip
 # LTspice Device Models Guide
 
 Using, creating, and integrating device models — MOSFETs, inductors, op-amps, transformers, and third-party models.
-
----
-
-## Table of Contents
-
-1. [MOSFET Models](#mosfet-models)
-2. [Inductor Models](#inductor-models)
-3. [Universal Op-Amp Models](#universal-op-amp-models)
-4. [Simulating Transformers](#simulating-transformers)
-5. [Third-Party Models](#third-party-models)
-6. [Model Compatibility](#model-compatibility)
 
 ---
 
@@ -4595,22 +4463,6 @@ conn.close()
 This document contains `.MEAS` statement examples for various simulation types.
 
 `.MEAS` results appear in the SPICE Output Log (View → SPICE Output Log, or CTRL+L)
-
-## Table of Contents
-
-- [.MEAS with AC Analysis - Key Functions](#meas-with-ac-analysis---key-functions)
-- [AC Analysis .MEAS Examples](#ac-analysis-meas-examples)
-- [.MEAS with Noise Analysis - Key Functions](#meas-with-noise-analysis---key-functions)
-- [Noise Analysis .MEAS Examples](#noise-analysis-meas-examples)
-
-#### TODO
-
-- [ ] Add transient analysis .MEAS examples
-- [ ] Add DC sweep .MEAS examples
-- [x] Add noise analysis .MEAS examples
-- [ ] Add operating point .MEAS examples
-
-
 
 ## .MEAS with AC Analysis - Key Functions
 
@@ -5354,18 +5206,6 @@ Frequently asked questions, efficiency calculations, SMPS Bode plots, platform n
 
 ---
 
-## Table of Contents
-
-1. [Program Updates](#program-updates)
-2. [License and Distribution](#license-and-distribution)
-3. [Running Under Linux](#running-under-linux)
-4. [Settings Overview](#settings-overview)
-5. [Efficiency Calculation](#efficiency-calculation)
-6. [SMPS Bode Plots (FRA)](#smps-bode-plots-fra)
-7. [Additional Resources](#additional-resources)
-
----
-
 ## Program Updates
 
 ### Updating LTspice
@@ -5595,16 +5435,6 @@ The groups.io Files section contains tutorials, additional component libraries, 
 # ADI Design Tools — LTspice Export Reference
 
 Analog Devices provides a suite of specialized design tools intended to accelerate your path to simulation. Use these tools upstream of LTspice to quickly explore component selection, evaluate performance trade-offs, and generate a starting schematic — then export directly to LTspice schematic files for full circuit verification.
-
----
-
-## Table of Contents
-
-1. [Signal Chain Designer](#signal-chain-designer)
-2. [Analog Filter Wizard](#analog-filter-wizard)
-3. [Analog Photodiode Wizard](#analog-photodiode-wizard)
-4. [Precision ADC Driver Tool](#precision-adc-driver-tool)
-5. [LTpowerCAD](#ltpowercad)
 
 ---
 

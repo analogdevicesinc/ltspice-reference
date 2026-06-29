@@ -19,15 +19,6 @@ This document contains `.MEAS` statement examples for various simulation types.
 - [.MEAS with Noise Analysis - Key Functions](#meas-with-noise-analysis---key-functions)
 - [Noise Analysis .MEAS Examples](#noise-analysis-meas-examples)
 
-#### TODO
-
-- [ ] Add transient analysis .MEAS examples
-- [ ] Add DC sweep .MEAS examples
-- [x] Add noise analysis .MEAS examples
-- [ ] Add operating point .MEAS examples
-
-
-
 ## .MEAS with AC Analysis - Key Functions
 
 ### Measurement Functions

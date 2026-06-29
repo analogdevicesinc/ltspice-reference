@@ -11,6 +11,7 @@ The script strips each file's YAML frontmatter and the "[<- AI Reference]"
 back-link, then joins the bodies with separators. Ordering follows the reading
 order in ai_ref/README.md.
 """
+import re
 from pathlib import Path
 
 # Reading order mirrors the Reference Files table in ai_ref/README.md.
@@ -64,6 +65,27 @@ def strip_backlink(text: str) -> str:
     return "\n".join(lines)
 
 
+def strip_toc(text: str) -> str:
+    """Drop a '## Table of Contents' section.
+
+    The in-document ToC is a list of anchor links useful on the rendered site
+    but pure noise for single-pass AI ingestion (it produces a low-value chunk
+    of bare links). Remove from the start of the heading through to the next
+    same-or-higher-level heading.
+    """
+    lines = text.splitlines()
+    out, i = [], 0
+    while i < len(lines):
+        if re.match(r"^##\s+Table of Contents\s*$", lines[i], re.IGNORECASE):
+            i += 1
+            while i < len(lines) and not re.match(r"^#{1,2}\s+", lines[i]):
+                i += 1
+            continue
+        out.append(lines[i])
+        i += 1
+    return "\n".join(out)
+
+
 def main() -> None:
     root = Path(__file__).resolve().parent
     ai_ref = root / "ai_ref"
@@ -73,7 +95,7 @@ def main() -> None:
         path = ai_ref / name
         if not path.exists():
             raise SystemExit(f"Missing source file: {path}")
-        body = strip_backlink(strip_frontmatter(path.read_text(encoding="utf-8"))).strip()
+        body = strip_toc(strip_backlink(strip_frontmatter(path.read_text(encoding="utf-8")))).strip()
         parts.append("\n\n---\n\n")
         parts.append(f"<!-- source: ai_ref/{name} -->\n\n")
         parts.append(body + "\n")
