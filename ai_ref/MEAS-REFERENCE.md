@@ -1,3 +1,9 @@
+---
+title: LTspice .MEAS Statement Reference
+description: .MEAS statement examples for AC, noise, transient, and DC analysis — extracting measurements from simulations.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice .MEAS Statement Reference

@@ -1,3 +1,9 @@
+---
+title: LTspice Schematic Design and Modification Guide
+description: The .asc file format, schematic editing, symbols, and hierarchy — including Windows-1252 encoding caveats.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Schematic Design and Modification Guide

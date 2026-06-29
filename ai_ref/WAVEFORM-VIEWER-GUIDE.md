@@ -1,3 +1,9 @@
+---
+title: LTspice Waveform Viewer Guide
+description: Viewing results, probing, waveform arithmetic, FFT, and export — analyzing simulation output.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Waveform Viewer Guide

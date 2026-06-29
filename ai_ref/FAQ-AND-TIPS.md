@@ -1,3 +1,9 @@
+---
+title: LTspice FAQ and Tips
+description: Updates, license, Linux, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice FAQ and Tips

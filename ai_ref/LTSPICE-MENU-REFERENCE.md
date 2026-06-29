@@ -1,3 +1,10 @@
+---
+title: LTspice Menu Reference
+description: Complete hierarchical listing of all menu options, access keys, and context menus in LTspice.
+version: "24+"
+last_modified_at: 2026-05-14
+---
+
 [← AI Reference](README.md)
 
 # LTspice Menu Reference

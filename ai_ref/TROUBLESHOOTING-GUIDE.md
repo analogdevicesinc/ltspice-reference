@@ -1,3 +1,9 @@
+---
+title: LTspice Troubleshooting Guide
+description: Convergence failures, debugging, and simulator options — diagnosing and fixing common simulation problems.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Troubleshooting Guide

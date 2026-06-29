@@ -1,3 +1,9 @@
+---
+title: LTspice Quickstart Guide
+description: Getting started, installation, interface modes, and the command line — your first LTspice simulation.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Quickstart Guide

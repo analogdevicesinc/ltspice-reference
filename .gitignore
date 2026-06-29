@@ -1,3 +1,6 @@
 /.claude
 /.venv
 *.code-workspace
+CLAUDE.md
+SYSTEM-PROMPT.md
+Troubleshooting-schematics/*

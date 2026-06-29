@@ -1,3 +1,9 @@
+---
+title: LTspice Simulation Commands Reference
+description: Dot commands (.tran, .ac, .dc, .meas, .step, .options, and more) — complete reference for all simulation directives.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Simulation Commands Reference

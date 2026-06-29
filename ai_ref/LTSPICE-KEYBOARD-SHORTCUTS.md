@@ -1,3 +1,10 @@
+---
+title: LTspice Keyboard Shortcuts Reference
+description: Keyboard shortcuts for all LTspice operations on Windows, based on the official LTspice cheat sheet.
+version: "24+"
+last_modified_at: 2026-05-14
+---
+
 [← AI Reference](README.md)
 
 # LTspice Keyboard Shortcuts Reference

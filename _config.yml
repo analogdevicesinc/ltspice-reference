@@ -1,0 +1,19 @@
+title: LTspice Reference
+description: >-
+  Documentation for LTspice, the free SPICE simulator from Analog Devices —
+  SPICE syntax, circuit elements, simulation commands, schematic format,
+  device models, and troubleshooting. Structured for engineers and AI assistants.
+url: https://analogdevicesinc.github.io
+baseurl: /ltspice-reference
+theme: minima            # native on GitHub Pages; its default layout head includes {% seo %} and the sitemap link
+lang: en
+plugins:
+  - jekyll-seo-tag       # emits <title>, meta description, Open Graph, Twitter cards, JSON-LD
+  - jekyll-sitemap       # generates /sitemap.xml automatically
+exclude:                 # keep non-content files out of the build and sitemap
+  - LICENSE.md
+  - "*.ps1"
+  - "*.code-workspace"
+  - CLAUDE.md
+  - SYSTEM-PROMPT.md
+  - Troubleshooting-schematics

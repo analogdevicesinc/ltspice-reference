@@ -1,3 +1,9 @@
+---
+title: LTspice Device Models Guide
+description: Using, creating, and integrating device models — MOSFETs, inductors, op-amps, transformers, and third-party models.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Device Models Guide

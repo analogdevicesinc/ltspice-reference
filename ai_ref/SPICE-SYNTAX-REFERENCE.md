@@ -1,3 +1,9 @@
+---
+title: SPICE Netlist Syntax Reference
+description: Netlist structure, encoding, multipliers, and conventions — the rules of LTspice netlist syntax.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # SPICE Netlist Syntax Reference
