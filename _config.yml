@@ -13,6 +13,7 @@ plugins:
   - jekyll-sitemap       # generates /sitemap.xml automatically
 exclude:                 # keep non-content files out of the build and sitemap
   - LICENSE.md
+  - CONTRIBUTING.md      # contributor guidance, not LTspice docs; GitHub shows it natively
   - "*.ps1"
   - "*.code-workspace"
   - CLAUDE.md
