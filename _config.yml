@@ -15,6 +15,7 @@ exclude:                 # keep non-content files out of the build and sitemap
   - LICENSE.md
   - CONTRIBUTING.md      # contributor guidance, not LTspice docs; GitHub shows it natively
   - "*.ps1"
+  - "*.py"               # build/generator scripts (e.g. generate_llms_full.py)
   - "*.code-workspace"
   - CLAUDE.md
   - SYSTEM-PROMPT.md

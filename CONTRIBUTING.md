@@ -82,14 +82,28 @@ Please don't delete them:
 
 ## Adding or removing a reference file
 
-A new document must be listed in **three** places to stay consistent (the
-sitemap updates automatically):
+A new document must be listed in these places to stay consistent (the sitemap
+updates automatically):
 
 1. The reference table in [`ai_ref/README.md`](ai_ref/README.md)
 2. The reference table in the root [`CLAUDE.md`](CLAUDE.md)
 3. The AI discovery index [`llms.txt`](llms.txt)
+4. The `FILES` list in [`generate_llms_full.py`](generate_llms_full.py), then
+   regenerate (see below)
 
-When removing a file, remove it from all three.
+When removing a file, remove it from all four.
+
+## Regenerating llms-full.txt
+
+[`llms-full.txt`](llms-full.txt) is the full-text bundle of every reference doc,
+for single-pass AI ingestion. It is **generated** — do not edit it by hand.
+After editing any file in `ai_ref/`, regenerate it:
+
+```sh
+python generate_llms_full.py
+```
+
+Commit the updated `llms-full.txt` alongside your content change.
 
 ## Cross-linking convention
 

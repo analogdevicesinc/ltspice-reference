@@ -31,6 +31,10 @@
 - [FAQ and Tips](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/FAQ-AND-TIPS.md): Updates, license, Linux, efficiency, SMPS Bode plots.
 - [ADI Design Tools Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/ADI-DESIGN-TOOLS-REFERENCE.md): ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics.
 
+## Full text
+
+- [llms-full.txt](https://analogdevicesinc.github.io/ltspice-reference/llms-full.txt): All reference docs concatenated into one file for single-pass ingestion.
+
 ## Resources
 
 - [LTspice product page](https://www.analog.com/ltspice): Official download and software licensing.
