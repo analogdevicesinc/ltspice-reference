@@ -1,0 +1,11 @@
+{%- comment -%}
+  Override of minima's default header.
+  Minima auto-lists every page with a title: in its top nav, and `header_pages: []`
+  does not suppress it (Liquid's `default` filter treats an empty array as unset and
+  falls back to all pages). We keep only the site-title link and drop the page-link nav.
+{%- endcomment -%}
+<header class="site-header" role="banner">
+  <div class="wrapper">
+    <a class="site-title" rel="author" href="{{ "/" | relative_url }}">{{ site.title | escape }}</a>
+  </div>
+</header>

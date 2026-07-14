@@ -1,3 +1,9 @@
+---
+title: LTspice Circuit Elements Reference
+description: Component syntax (R, L, C, V, I, D, Q, M, sources, switches) — parameters and models for every circuit element type.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Circuit Elements Reference
@@ -833,3 +839,6 @@ X1 in out 0 {name} top=9K bot=1K
 ---
 
 *See also: [SPICE-SYNTAX-REFERENCE.md](SPICE-SYNTAX-REFERENCE.md) for netlist conventions, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for dot commands*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

@@ -1,3 +1,9 @@
+---
+title: ADI Design Tools — LTspice Export Reference
+description: ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # ADI Design Tools — LTspice Export Reference
@@ -217,3 +223,6 @@ Use the **LTspice** button on the schematic page within LTpowerCAD. The export p
 ---
 
 *See also: [DEVICE-MODELS-GUIDE.md](DEVICE-MODELS-GUIDE.md) for working with ADI SPICE models in LTspice, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for simulation command syntax*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

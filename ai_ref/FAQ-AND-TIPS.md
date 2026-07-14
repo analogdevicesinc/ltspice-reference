@@ -1,3 +1,9 @@
+---
+title: LTspice FAQ and Tips
+description: Updates, license, Linux, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice FAQ and Tips
@@ -238,3 +244,6 @@ The groups.io Files section contains tutorials, additional component libraries, 
 ---
 
 *See also: [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for convergence solutions, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .FRA command details*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

@@ -1,3 +1,10 @@
+---
+title: LTspice Menu Reference
+description: Complete hierarchical listing of all menu options, access keys, and context menus in LTspice.
+version: "24+"
+last_modified_at: 2026-05-14
+---
+
 [← AI Reference](README.md)
 
 # LTspice Menu Reference
@@ -235,3 +242,7 @@ Within each menu, underlined letters (mnemonics) can be pressed directly without
 - **Context-sensitive**: Some menu items only appear in specific contexts (schematic vs. waveform viewer vs. symbol editor)
 - **Platform**: This reference is for Windows version
 - **Version-specific**: Menu options may vary between LTspice versions
+
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

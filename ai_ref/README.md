@@ -1,3 +1,10 @@
+---
+title: LTspice AI Reference
+description: Entry point for the LTspice AI reference — setup, critical conventions, quick examples, and an index of all reference files.
+version: "24+"
+permalink: /ai_ref/
+---
+
 [← Home](../README.md)
 
 # LTspice AI Reference
