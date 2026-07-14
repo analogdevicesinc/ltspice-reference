@@ -91,11 +91,13 @@ Mouse actions are on label of waveform trace.
 ## Waveform Pan & Cursor
 
 ### No Cursors
+
 | Shortcut | Action |
 |----------|--------|
 | ← → ↑ ↓ | Navigate |
 
 ### Cursor Present
+
 | Shortcut | Action |
 |----------|--------|
 | ← → | Snap cursor to next time data point |
@@ -105,6 +107,7 @@ Mouse actions are on label of waveform trace.
 | Ctrl+Shift+← → | Bump cursor 100 data points |
 
 ### Mouse Panning
+
 | Shortcut | Action |
 |----------|--------|
 | Ctrl | Pan with mouse |
@@ -182,8 +185,9 @@ Mouse actions are on label of waveform trace.
 - [LTSPICE-MENU-REFERENCE.md](LTSPICE-MENU-REFERENCE.md) — Complete menu hierarchy and shortcuts
 - [LTSPICE-QUICKSTART.md](LTSPICE-QUICKSTART.md) — Getting started guide
 - [WAVEFORM-VIEWER-GUIDE.md](WAVEFORM-VIEWER-GUIDE.md) — Detailed waveform viewer documentation
+  
 
 ---
 
-*©2026 Analog Devices, Inc. All rights reserved.*  
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 

@@ -750,3 +750,4 @@ low_freq_noise_density: V(onoise) =1.47854748889e-07 at 1
 
 ---
 
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

@@ -278,3 +278,6 @@ LTspice can run PSpice semiconductor and behavioral models. Standard SPICE model
 ---
 
 *See also: [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax and model parameters, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MODEL and .LIB directives*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

@@ -314,3 +314,6 @@ Helmut Sennewald's free utility (http://groups.io/g/LTspice) supports data manip
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE automated measurements, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for compression settings*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

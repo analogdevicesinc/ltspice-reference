@@ -242,3 +242,7 @@ Within each menu, underlined letters (mnemonics) can be pressed directly without
 - **Context-sensitive**: Some menu items only appear in specific contexts (schematic vs. waveform viewer vs. symbol editor)
 - **Platform**: This reference is for Windows version
 - **Version-specific**: Menu options may vary between LTspice versions
+
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
