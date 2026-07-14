@@ -50,6 +50,12 @@ LTspice conforms to Unicode standard version 14. Text comparison uses canonical 
 | `;` anywhere in line | Rest of line is a comment |
 | `+` at line start | Continuation of previous line (the `+` is removed and remainder appended) |
 
+### Special Netlister Comments
+
+The LTspice netlister may append machine-readable comments that begin with `;§`. These are ordinary comments (ignored by the simulator) but carry structural metadata:
+
+- **`;§pnba`** on a subcircuit (`X`) instance line lists the symbol's pin names, delimited by `)`, in the same order as the net assignments. See [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md#x--subcircuit) for details and an example.
+
 ---
 
 ## Line Types by Leading Character
