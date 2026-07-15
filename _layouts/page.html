@@ -1,0 +1,15 @@
+---
+layout: default
+---
+{%- comment -%}
+  Override of minima's default page layout.
+  Minima injects <h1 class="post-title">{{ page.title }}</h1> into the header,
+  which duplicates the H1 already present at the top of each markdown body.
+  We keep the page.title in frontmatter (it drives jekyll-seo-tag's <title>,
+  og:title, etc.) but render only the body's own H1 by omitting the header here.
+{%- endcomment -%}
+<article class="post">
+  <div class="post-content">
+    {{ content }}
+  </div>
+</article>

@@ -1,0 +1,42 @@
+# LTspice Reference
+
+> Documentation for LTspice, the free general-purpose SPICE simulator from Analog Devices.
+> These files cover SPICE syntax, circuit elements, simulation (dot) commands, the schematic
+> (.asc) file format, device models, the waveform viewer, the .MEAS measurement system, and
+> troubleshooting. They are written to be accurate and parsable by both engineers and AI assistants.
+> Links below point to raw Markdown source for clean ingestion.
+
+## Conventions (read first)
+
+- Engineering multiplier pitfall: `1M` means 1 milli (1e-3), NOT 1 mega. Use `1Meg` for megaohms.
+- Always write micro as `u` (1e-6) — never the `µ` symbol — in netlists, schematics, and code.
+- Node `0` is always ground; `GND` is a synonym. Names are case-insensitive.
+- `.asc` schematic files are Windows-1252 encoded; edit them only with encoding-aware tools.
+
+## Documentation
+
+- [Overview / AI Reference index](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/README.md): Entry point, setup, critical conventions, and quick examples.
+- [Quickstart](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/LTSPICE-QUICKSTART.md): Getting started, installation, interface modes, CLI.
+- [Keyboard Shortcuts](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/LTSPICE-KEYBOARD-SHORTCUTS.md): Keyboard shortcuts for all LTspice operations.
+- [Menu Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/LTSPICE-MENU-REFERENCE.md): Complete menu hierarchy, access keys, context menus.
+- [SPICE Syntax Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/SPICE-SYNTAX-REFERENCE.md): Netlist structure, encoding, multipliers, conventions.
+- [Circuit Elements Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/CIRCUIT-ELEMENTS-REFERENCE.md): Component syntax (R, L, C, V, I, D, Q, M, sources, switches).
+- [Simulation Commands Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/SIMULATION-COMMANDS-REFERENCE.md): Dot commands (.tran, .ac, .dc, .meas, .step, .options, etc.).
+- [Troubleshooting Guide](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/TROUBLESHOOTING-GUIDE.md): Convergence failures, debugging, simulator options.
+- [Schematic Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/SCHEMATIC-REFERENCE.md): .asc file format, schematic editing, symbols, hierarchy.
+- [Waveform Viewer Guide](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/WAVEFORM-VIEWER-GUIDE.md): Viewing results, probing, arithmetic, FFT, export.
+- [Device Models Guide](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/DEVICE-MODELS-GUIDE.md): MOSFET/inductor/opamp models, third-party integration.
+- [.MEAS Database Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/MEASURE-DATABASE-REFERENCE.md): .MEAS SQLite database schema, querying results.
+- [.MEAS Statement Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/MEAS-REFERENCE.md): .MEAS statement examples for AC, transient, and DC analysis.
+- [FAQ and Tips](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/FAQ-AND-TIPS.md): Updates, license, Linux, efficiency, SMPS Bode plots.
+- [ADI Design Tools Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/ADI-DESIGN-TOOLS-REFERENCE.md): ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics.
+
+## Full text
+
+- [llms-full.txt](https://analogdevicesinc.github.io/ltspice-reference/llms-full.txt): All reference docs concatenated into one file for single-pass ingestion.
+
+## Resources
+
+- [LTspice product page](https://www.analog.com/ltspice): Official download and software licensing.
+- [LTspice forum](https://ez.analog.com/design-tools-and-calculators/ltspice/): Community support and discussion.
+- [Rendered documentation site](https://analogdevicesinc.github.io/ltspice-reference/): HTML version of these references.

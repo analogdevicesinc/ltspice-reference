@@ -1,3 +1,9 @@
+---
+title: SPICE Netlist Syntax Reference
+description: Netlist structure, encoding, multipliers, and conventions — the rules of LTspice netlist syntax.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # SPICE Netlist Syntax Reference
@@ -198,3 +204,6 @@ These options control how LTspice generates netlists from schematics:
 ---
 
 *See also: [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for dot commands*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

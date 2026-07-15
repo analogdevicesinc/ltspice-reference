@@ -1,3 +1,9 @@
+---
+title: LTspice Quickstart Guide
+description: Getting started, installation, interface modes, and the command line — your first LTspice simulation.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Quickstart Guide
@@ -79,12 +85,61 @@ Key attributes:
 
 ---
 
+## Toolbar
+
+The toolbar provides one-click access to common commands. Toolbar visibility can be toggled from **View > Toolbar**, and the icon style/size is configurable under **Tools > Settings** (see [Settings](#settings)).
+
+
+| Icon | Button Name | Keyboard Shortcut |
+|------|-------------|-------------------|
+| <img src="images/toolbar/Settings.png" alt="Settings" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Settings |  |
+| <img src="images/toolbar/New.png" alt="New Schematic" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | New Schematic | Ctrl+N |
+| <img src="images/toolbar/Open.png" alt="Open" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Open | Ctrl+O |
+| <img src="images/toolbar/Save.png" alt="Save" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Save | Ctrl+S |
+| <img src="images/toolbar/Print.png" alt="Print" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Print | Ctrl+P |
+| <img src="images/toolbar/Simulator%20Settings.png" alt="Configure Analysis" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Configure Analysis | A |
+| <img src="images/toolbar/Run.png" alt="Run/Pause" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Run/Pause | Alt+R |
+| <img src="images/toolbar/Stop.png" alt="Stop" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Stop | Alt+S |
+| <img src="images/toolbar/Vertical%20Tile.png" alt="Tile Windows Vertically" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Tile Windows Vertically | |
+| <img src="images/toolbar/Horizontal%20Tile.png" alt="Tile Windows Horizontally" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Tile Windows Horizontally | |
+| <img src="images/toolbar/Cascade.png" alt="Cascade Windows" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Cascade Windows | |
+| <img src="images/toolbar/Zoom%20In.png" alt="Zoom Area" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Zoom Area | Z |
+| <img src="images/toolbar/Zoom%20Out.png" alt="Zoom Back" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Zoom Back | Shift+Z |
+| <img src="images/toolbar/Zoom%20to%20Fit.png" alt="Zoom to Fit" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Zoom to Fit | Space |
+| <img src="images/toolbar/Fit%20Y.png" alt="Autorange" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Autorange | Ctrl+Y |
+| <img src="images/toolbar/Pick%20Visible%20Traces.png" alt="Pick Visible Traces" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Pick Visible Traces | |
+| <img src="images/toolbar/Wire.png" alt="Wire" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Wire | W |
+| <img src="images/toolbar/Ground.png" alt="Ground" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ground | G |
+| <img src="images/toolbar/Voltage.png" alt="Voltage Source" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Voltage Source | V |
+| <img src="images/toolbar/Resistor.png" alt="Resistor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Resistor | R |
+| <img src="images/toolbar/Capacitor.png" alt="Capacitor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Capacitor | C |
+| <img src="images/toolbar/Inductor.png" alt="Inductor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Inductor | L |
+| <img src="images/toolbar/Diode.png" alt="Diode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Diode | D |
+| <img src="images/toolbar/Component.png" alt="Component" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Component | P |
+| <img src="images/toolbar/Label%20Net.png" alt="Label Net" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Label Net | N |
+| <img src="images/toolbar/Text.png" alt="Text" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Text | T |
+| <img src="images/toolbar/Spice%20Directive.png" alt="SPICE Directive" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | SPICE Directive | . |
+| <img src="images/toolbar/Delete.png" alt="Delete Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Delete Mode | Backspace or Delete |
+| <img src="images/toolbar/Copy.png" alt="Duplicate Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Duplicate Mode | Ctrl+C |
+| <img src="images/toolbar/Move.png" alt="Move Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Move Mode | M |
+| <img src="images/toolbar/Stretch.png" alt="Stretch Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Stretch Mode | S |
+| <img src="images/toolbar/Rotate.png" alt="Rotate" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Rotate | Ctrl+R |
+| <img src="images/toolbar/Mirror.png" alt="Mirror" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Mirror | Ctrl+E |
+| <img src="images/toolbar/Undo.png" alt="Undo" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Undo | Ctrl+Z |
+| <img src="images/toolbar/Redo.png" alt="Redo" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Redo | Ctrl+Shift+Z |
+| <img src="images/toolbar/Find.png" alt="Search" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Search | Ctrl+F |
+
+
+---
+
 ## Keyboard Shortcuts
 
 - View shortcuts: **Help > Keyboard Shortcut Cheat Sheet** (always-on-top window)
 - Customize: Click **Edit Keyboard Shortcuts** button in cheat sheet
 - Save/load shortcut sets from files
 - Shortcuts persist between sessions
+
+See [LTSPICE-KEYBOARD-SHORTCUTS.md](LTSPICE-KEYBOARD-SHORTCUTS.md) for the full shortcut reference.
 
 ---
 
@@ -216,3 +271,6 @@ ltspice.exe "C:\Projects\MyCircuit\filter.asc"
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for all dot commands, [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for fixing simulation problems*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

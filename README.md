@@ -1,3 +1,11 @@
+---
+title: LTspice Reference Documentation
+description: Documentation repository for LTspice — the free, high-performance SPICE simulator from Analog Devices. AI reference, syntax, and circuit examples.
+version: "24+"
+permalink: /
+layout: page
+---
+
 # LTspice Reference Documentation
 
 **[📖 View on GitHub](https://github.com/analogdevicesinc/ltspice-reference)**

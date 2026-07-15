@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://analogdevicesinc.github.io/ltspice-reference/sitemap.xml

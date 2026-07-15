@@ -1,3 +1,9 @@
+---
+title: LTspice .MEAS Statement Reference
+description: .MEAS statement examples for AC, noise, transient, and DC analysis — extracting measurements from simulations.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice .MEAS Statement Reference
@@ -12,15 +18,6 @@ This document contains `.MEAS` statement examples for various simulation types.
 - [AC Analysis .MEAS Examples](#ac-analysis-meas-examples)
 - [.MEAS with Noise Analysis - Key Functions](#meas-with-noise-analysis---key-functions)
 - [Noise Analysis .MEAS Examples](#noise-analysis-meas-examples)
-
-#### TODO
-
-- [ ] Add transient analysis .MEAS examples
-- [ ] Add DC sweep .MEAS examples
-- [x] Add noise analysis .MEAS examples
-- [ ] Add operating point .MEAS examples
-
-
 
 ## .MEAS with AC Analysis - Key Functions
 
@@ -753,3 +750,4 @@ low_freq_noise_density: V(onoise) =1.47854748889e-07 at 1
 
 ---
 
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

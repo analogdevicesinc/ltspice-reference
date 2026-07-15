@@ -1,3 +1,9 @@
+---
+title: LTspice Troubleshooting Guide
+description: Convergence failures, debugging, and simulator options — diagnosing and fixing common simulation problems.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Troubleshooting Guide
@@ -387,3 +393,6 @@ During transient analysis, press the **`0` key** to discard past waveform data a
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .OPTIONS details, [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component parameters*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

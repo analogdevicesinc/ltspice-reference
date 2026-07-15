@@ -1,3 +1,9 @@
+---
+title: LTspice Waveform Viewer Guide
+description: Viewing results, probing, waveform arithmetic, FFT, and export — analyzing simulation output.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Waveform Viewer Guide
@@ -308,3 +314,6 @@ Helmut Sennewald's free utility (http://groups.io/g/LTspice) supports data manip
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE automated measurements, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for compression settings*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

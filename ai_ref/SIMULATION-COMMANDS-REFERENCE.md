@@ -1,3 +1,9 @@
+---
+title: LTspice Simulation Commands Reference
+description: Dot commands (.tran, .ac, .dc, .meas, .step, .options, and more) — complete reference for all simulation directives.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Simulation Commands Reference
@@ -754,3 +760,6 @@ Automatically included in schematics. Enables cross-probing pin currents by clic
 ---
 
 *See also: [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for convergence options*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

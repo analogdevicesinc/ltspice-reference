@@ -1,3 +1,9 @@
+---
+title: LTspice Schematic Design and Modification Guide
+description: The .asc file format, schematic editing, symbols, and hierarchy — including Windows-1252 encoding caveats.
+version: "24+"
+---
+
 [← AI Reference](README.md)
 
 # LTspice Schematic Design and Modification Guide
@@ -752,3 +758,7 @@ Accel, Algorex, Allegro, Applicon Bravo, Applicon Leap, Cadnetix, Calay, Calay90
 - Pin order for PCB tools often differs from LTspice/ADI pin numbering
 - Create custom symbols matching your PCB tool's expected pin order if needed
 - Different packages may have different pin assignments
+
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
