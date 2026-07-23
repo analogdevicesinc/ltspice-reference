@@ -18,24 +18,6 @@ LTspice is a general-purpose SPICE simulator with built-in schematic capture and
 - Website: https://www.analog.com/ltspice
 - Forum: https://ez.analog.com/design-tools-and-calculators/ltspice/
 
-## Setup
-
-From your project directory, run one of the following:
-
-**Per-user install:**
-```bat
-"%LOCALAPPDATA%\Programs\ADI\LTspice\LTspice.exe" -init_ai_ref
-```
-
-**System-wide install:**
-```bat
-"C:\Program Files\ADI\LTspice\LTspice.exe" -init_ai_ref
-```
-
-This creates copies in the current directory from the reference files in `%LOCALAPPDATA%\LTspice\reference`. AI assistants will automatically use these files for LTspice guidance.
-
-Do not edit the referenced files. The files may be updated by running the -init_ai_ref command again.
-
 ---
 
 ## Critical Conventions
