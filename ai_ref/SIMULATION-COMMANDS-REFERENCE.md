@@ -412,19 +412,35 @@ Uses dynamic scoping: names resolved where function is called.
 
 ### .STEP — Parameter Sweeps
 
-Repeatedly run analysis while sweeping a parameter. Up to 3 nested levels.
+Repeatedly run analysis while sweeping a parameter. Multiple `.step` directives
+nest, multiplying the run count: *n* two-value sweeps produce 2ⁿ runs.
 
 ```spice
-.step [oct|dec|lin] <item> <start> <end> <incr>
-.step <item> list <val1> [<val2> ...]
+.step [oct|dec|lin] <item> <start> <end> <incr|points>
+.step <item> list <val1> <val2> [<val3> ...]
 .step <item> file=<filename>
 ```
 
 **Item formats**:
-- Source: `V1` or `I1`
-- Parameter: `param RLOAD`
-- Model parameter: `NPN 2N2222(VAF)`
-- Temperature: `temp`
+
+| Item | Syntax | Notes |
+|------|--------|-------|
+| Parameter | `param RLOAD` | The `param` keyword is **required** |
+| Source | `V1` or `I1` | Voltage or current source name |
+| Temperature | `temp` | |
+| Model parameter | `NPN 2N2222(VAF)` | The model **type prefix is required** |
+
+**Rules**:
+
+- **At least two steps are required.** A spec resolving to one step (`list` with
+  one value, duplicate-only values, `start == end`, or a zero increment) is
+  rejected and the simulation does not run at all.
+- **`oct|dec|lin` precedes the item**, and cannot combine with `list`.
+- **The third argument depends on the keyword**: an increment for bare/`lin`, but
+  points *per decade* for `dec` and *per octave* for `oct`.
+- **`list` and `file=` take plain numbers** — suffixes and scientific notation are
+  fine, `{}` expressions are not. A `file=` list may be newline- or
+  space-separated.
 
 **Examples**:
 ```spice
@@ -434,6 +450,7 @@ Repeatedly run analysis while sweeping a parameter. Up to 3 nested levels.
 .step temp -40 125 5
 .step NPN 2N2222(BF) 50 200 50
 .step dec param freq 1K 1Meg 10
+.step param Rload file=rvalues.txt
 ```
 
 ---
@@ -443,7 +460,7 @@ Repeatedly run analysis while sweeping a parameter. Up to 3 nested levels.
 Archaic shorthand for `.step temp list ...`.
 
 ```spice
-.temp <T1> <T2> ...
+.temp <T1> [<T2> ...]
 ```
 
 **Example**:
