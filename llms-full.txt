@@ -26,24 +26,6 @@ LTspice is a general-purpose SPICE simulator with built-in schematic capture and
 - Website: https://www.analog.com/ltspice
 - Forum: https://ez.analog.com/design-tools-and-calculators/ltspice/
 
-## Setup
-
-From your project directory, run one of the following:
-
-**Per-user install:**
-```bat
-"%LOCALAPPDATA%\Programs\ADI\LTspice\LTspice.exe" -init_ai_ref
-```
-
-**System-wide install:**
-```bat
-"C:\Program Files\ADI\LTspice\LTspice.exe" -init_ai_ref
-```
-
-This creates copies in the current directory from the reference files in `%LOCALAPPDATA%\LTspice\reference`. AI assistants will automatically use these files for LTspice guidance.
-
-Do not edit the referenced files. The files may be updated by running the -init_ai_ref command again.
-
 ---
 
 ## Critical Conventions
@@ -279,12 +261,61 @@ Key attributes:
 
 ---
 
+## Toolbar
+
+The toolbar provides one-click access to common commands. Toolbar visibility can be toggled from **View > Toolbar**, and the icon style/size is configurable under **Tools > Settings** (see [Settings](#settings)).
+
+
+| Icon | Button Name | Keyboard Shortcut |
+|------|-------------|-------------------|
+| <img src="images/toolbar/Settings.png" alt="Settings" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Settings |  |
+| <img src="images/toolbar/New.png" alt="New Schematic" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | New Schematic | Ctrl+N |
+| <img src="images/toolbar/Open.png" alt="Open" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Open | Ctrl+O |
+| <img src="images/toolbar/Save.png" alt="Save" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Save | Ctrl+S |
+| <img src="images/toolbar/Print.png" alt="Print" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Print | Ctrl+P |
+| <img src="images/toolbar/Simulator%20Settings.png" alt="Configure Analysis" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Configure Analysis | A |
+| <img src="images/toolbar/Run.png" alt="Run/Pause" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Run/Pause | Alt+R |
+| <img src="images/toolbar/Stop.png" alt="Stop" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Stop | Alt+S |
+| <img src="images/toolbar/Vertical%20Tile.png" alt="Tile Windows Vertically" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Tile Windows Vertically | |
+| <img src="images/toolbar/Horizontal%20Tile.png" alt="Tile Windows Horizontally" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Tile Windows Horizontally | |
+| <img src="images/toolbar/Cascade.png" alt="Cascade Windows" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Cascade Windows | |
+| <img src="images/toolbar/Zoom%20In.png" alt="Zoom Area" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Zoom Area | Z |
+| <img src="images/toolbar/Zoom%20Out.png" alt="Zoom Back" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Zoom Back | Shift+Z |
+| <img src="images/toolbar/Zoom%20to%20Fit.png" alt="Zoom to Fit" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Zoom to Fit | Space |
+| <img src="images/toolbar/Fit%20Y.png" alt="Autorange" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Autorange | Ctrl+Y |
+| <img src="images/toolbar/Pick%20Visible%20Traces.png" alt="Pick Visible Traces" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Pick Visible Traces | |
+| <img src="images/toolbar/Wire.png" alt="Wire" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Wire | W |
+| <img src="images/toolbar/Ground.png" alt="Ground" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ground | G |
+| <img src="images/toolbar/Voltage.png" alt="Voltage Source" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Voltage Source | V |
+| <img src="images/toolbar/Resistor.png" alt="Resistor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Resistor | R |
+| <img src="images/toolbar/Capacitor.png" alt="Capacitor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Capacitor | C |
+| <img src="images/toolbar/Inductor.png" alt="Inductor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Inductor | L |
+| <img src="images/toolbar/Diode.png" alt="Diode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Diode | D |
+| <img src="images/toolbar/Component.png" alt="Component" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Component | P |
+| <img src="images/toolbar/Label%20Net.png" alt="Label Net" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Label Net | N |
+| <img src="images/toolbar/Text.png" alt="Text" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Text | T |
+| <img src="images/toolbar/Spice%20Directive.png" alt="SPICE Directive" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | SPICE Directive | . |
+| <img src="images/toolbar/Delete.png" alt="Delete Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Delete Mode | Backspace or Delete |
+| <img src="images/toolbar/Copy.png" alt="Duplicate Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Duplicate Mode | Ctrl+C |
+| <img src="images/toolbar/Move.png" alt="Move Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Move Mode | M |
+| <img src="images/toolbar/Stretch.png" alt="Stretch Mode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Stretch Mode | S |
+| <img src="images/toolbar/Rotate.png" alt="Rotate" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Rotate | Ctrl+R |
+| <img src="images/toolbar/Mirror.png" alt="Mirror" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Mirror | Ctrl+E |
+| <img src="images/toolbar/Undo.png" alt="Undo" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Undo | Ctrl+Z |
+| <img src="images/toolbar/Redo.png" alt="Redo" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Redo | Ctrl+Shift+Z |
+| <img src="images/toolbar/Find.png" alt="Search" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Search | Ctrl+F |
+
+
+---
+
 ## Keyboard Shortcuts
 
 - View shortcuts: **Help > Keyboard Shortcut Cheat Sheet** (always-on-top window)
 - Customize: Click **Edit Keyboard Shortcuts** button in cheat sheet
 - Save/load shortcut sets from files
 - Shortcuts persist between sessions
+
+See [LTSPICE-KEYBOARD-SHORTCUTS.md](LTSPICE-KEYBOARD-SHORTCUTS.md) for the full shortcut reference.
 
 ---
 
@@ -416,6 +447,9 @@ ltspice.exe "C:\Projects\MyCircuit\filter.asc"
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for all dot commands, [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for fixing simulation problems*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -429,26 +463,29 @@ ltspice.exe "C:\Projects\MyCircuit\filter.asc"
 
 Complete keyboard shortcuts for Windows. Based on the official LTspice keyboard shortcut cheat sheet.
 
+**Official cheat sheet (PDF):** [standard](https://www.analog.com/media/en/news-marketing-collateral/solutions-bulletins-brochures/ltspice-keyboard-shortcuts.pdf) · [ink saver](https://www.analog.com/media/en/news-marketing-collateral/solutions-bulletins-brochures/ltspice-keyboard-shortcuts-ink-saver.pdf) (print-friendly)
+
+
 ---
 
 ## Place Components
 
-| Shortcut | Action |
-|----------|--------|
-| W | Wire |
-| G | Ground |
-| Alt+G | Com |
-| V | Voltage source |
-| R | Resistor |
-| C | Capacitor |
-| L | Inductor |
-| D | Diode |
-| P | Component (opens component dialog) |
-| N | Label net |
-| T | Text/comment |
-| . | SPICE directive (right-click text field to open "Help me Edit" dialog) |
-| B | Bus tap |
-| Shift+left-click | Toggle directive/comment |
+| Icon | Shortcut | Action |
+|------|----------|--------|
+| <img src="images/toolbar/Wire.png" alt="Wire" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | W | Wire |
+| <img src="images/toolbar/Ground.png" alt="Ground" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | G | Ground |
+|  | Alt+G | Com |
+| <img src="images/toolbar/Voltage.png" alt="Voltage Source" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | V | Voltage source |
+| <img src="images/toolbar/Resistor.png" alt="Resistor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | R | Resistor |
+| <img src="images/toolbar/Capacitor.png" alt="Capacitor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | C | Capacitor |
+| <img src="images/toolbar/Inductor.png" alt="Inductor" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | L | Inductor |
+| <img src="images/toolbar/Diode.png" alt="Diode" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | D | Diode |
+| <img src="images/toolbar/Component.png" alt="Component" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | P | Component (opens component dialog) |
+| <img src="images/toolbar/Label%20Net.png" alt="Label Net" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | N | Label net |
+| <img src="images/toolbar/Text.png" alt="Text" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | T | Text/comment |
+| <img src="images/toolbar/Spice%20Directive.png" alt="Spice Directive" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | . | SPICE directive (right-click text field to open "Help me Edit" dialog) |
+|  | B | Bus tap |
+|  | Shift+left-click | Toggle directive/comment |
 
 *Press Esc or right-click to exit mode.*
 
@@ -456,23 +493,22 @@ Complete keyboard shortcuts for Windows. Based on the official LTspice keyboard 
 
 ## General Editing
 
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+X | Delete |
-| Del | Delete |
-| Backspace | Delete |
-| Ctrl+C | Copy/duplicate* |
-| Ctrl+V | Paste |
-| M | Move* (select components to move) |
-| S | Stretch* (select anchor points to move) |
-| Ctrl+R | Rotate |
-| Ctrl+E | Mirror |
-| Z | **Schematic:** zoom area (drag over area), zoom in (click on scheme)<br>**Waveform:** zoom area is default mode |
-| Shift+Z | Zoom out |
-| Space | Zoom to fit, zoom extents |
-| Ctrl+G | Toggle grid |
-| Ctrl+Z | Undo |
-| Ctrl+Shift+Z | Redo |
+| Icon | Shortcut | Action |
+|------|----------|--------|
+| <img src="images/toolbar/Delete.png" alt="Delete" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ctrl+X | Delete |
+| <img src="images/toolbar/Delete.png" alt="Delete" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Del | Delete |
+| <img src="images/toolbar/Delete.png" alt="Delete" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Backspace | Delete |
+| <img src="images/toolbar/Copy.png" alt="Duplicate" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ctrl+C | Copy/duplicate* |
+| <img src="images/toolbar/Move.png" alt="Move" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | M | Move* (select components to move) |
+| <img src="images/toolbar/Stretch.png" alt="Stretch" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | S | Stretch* (select anchor points to move) |
+| <img src="images/toolbar/Rotate.png" alt="Rotate" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ctrl+R | Rotate |
+| <img src="images/toolbar/Mirror.png" alt="Mirror" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ctrl+E | Mirror |
+| <img src="images/toolbar/Zoom%20In.png" alt="Zoom Area" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Z | **Schematic:** zoom area (drag over area), zoom in (click on scheme)<br>**Waveform:** zoom area is default mode |
+| <img src="images/toolbar/Zoom%20Out.png" alt="Zoom Out" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Shift+Z | Zoom out |
+| <img src="images/toolbar/Zoom%20to%20Fit.png" alt="Zoom Fit" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Space | Zoom to fit, zoom extents |
+|  | Ctrl+G | Toggle grid |
+| <img src="images/toolbar/Undo.png" alt="Undo" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ctrl+Z | Undo |
+| <img src="images/toolbar/Redo.png" alt="Redo" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Ctrl+Shift+Z | Redo |
 
 *Choose mode first, then select component or waveform title.*  
 *Press Esc or right-click to exit mode.*
@@ -506,11 +542,13 @@ Mouse actions are on label of waveform trace.
 ## Waveform Pan & Cursor
 
 ### No Cursors
+
 | Shortcut | Action |
 |----------|--------|
 | ← → ↑ ↓ | Navigate |
 
 ### Cursor Present
+
 | Shortcut | Action |
 |----------|--------|
 | ← → | Snap cursor to next time data point |
@@ -520,6 +558,7 @@ Mouse actions are on label of waveform trace.
 | Ctrl+Shift+← → | Bump cursor 100 data points |
 
 ### Mouse Panning
+
 | Shortcut | Action |
 |----------|--------|
 | Ctrl | Pan with mouse |
@@ -546,13 +585,13 @@ Mouse actions are on label of waveform trace.
 
 *Probes available once simulation is running.*
 
-| Shortcut | Action | What it Does |
-|----------|--------|--------------|
-| click | **Probe Wire** | Plot voltage |
-| click | **Probe Component** | Plot current |
-| Alt+click | **Probe Wire** | Plot current |
-| drag net-to-net | **Probe Component** | Plot instantaneous power |
-| drag net-to-net | | Plot differential voltage |
+| Icon | Shortcut | Action | What it Does |
+|------|----------|--------|--------------|
+| <img src="images/cursors/Probe%20Red.png" alt="Probe Voltage" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | click | **Probe Wire** | Plot voltage |
+| <img src="images/cursors/CurrentProbeLeft.png" alt="Probe Current" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | click | **Probe Component** | Plot current |
+| <img src="images/cursors/CurrentProbeLeft.png" alt="Probe Wire Current" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Alt+click | **Probe Wire** | Plot current |
+| <img src="images/cursors/ProbeTemp.png" alt="Probe Power" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Alt+click | **Probe Component** | Plot instantaneous power |
+|  | drag net-to-net | | Plot differential voltage |
 
 ---
 
@@ -569,13 +608,13 @@ Mouse actions are on label of waveform trace.
 
 ## Simulator
 
-| Shortcut | Action |
-|----------|--------|
-| A | Configure analysis |
-| Alt+R | Run/pause |
-| Alt+S | Stop |
-| Ctrl+L | View SPICE log |
-| 0 | Reset sim waveform T = 0 |
+| Icon | Shortcut | Action |
+|------|----------|--------|
+| <img src="images/toolbar/Simulator%20Settings.png" alt="Configure Analysis" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | A | Configure analysis |
+| <img src="images/toolbar/Run.png" alt="Run Pause" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Alt+R | Run/pause |
+| <img src="images/toolbar/Stop.png" alt="Stop" width="20" style="background:#fff;padding:2px;border-radius:3px;vertical-align:middle"> | Alt+S | Stop |
+|  | Ctrl+L | View SPICE log |
+|  | 0 | Reset sim waveform T = 0 |
 
 *Schematics can be edited even as a simulation runs.*  
 *Edits affect subsequent simulations.*
@@ -597,10 +636,11 @@ Mouse actions are on label of waveform trace.
 - [LTSPICE-MENU-REFERENCE.md](LTSPICE-MENU-REFERENCE.md) — Complete menu hierarchy and shortcuts
 - [LTSPICE-QUICKSTART.md](LTSPICE-QUICKSTART.md) — Getting started guide
 - [WAVEFORM-VIEWER-GUIDE.md](WAVEFORM-VIEWER-GUIDE.md) — Detailed waveform viewer documentation
+  
 
 ---
 
-*©2026 Analog Devices, Inc. All rights reserved.*
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -843,6 +883,10 @@ Within each menu, underlined letters (mnemonics) can be pressed directly without
 - **Platform**: This reference is for Windows version
 - **Version-specific**: Menu options may vary between LTspice versions
 
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
+
 
 ---
 
@@ -897,6 +941,12 @@ LTspice conforms to Unicode standard version 14. Text comparison uses canonical 
 | `*` at line start | Entire line is a comment |
 | `;` anywhere in line | Rest of line is a comment |
 | `+` at line start | Continuation of previous line (the `+` is removed and remainder appended) |
+
+### Special Netlister Comments
+
+The LTspice netlister may append machine-readable comments that begin with `;§`. These are ordinary comments (ignored by the simulator) but carry structural metadata:
+
+- **`;§pnba`** on a subcircuit (`X`) instance line lists the symbol's pin names, delimited by `)`, in the same order as the net assignments. See [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md#x--subcircuit) for details and an example.
 
 ---
 
@@ -1040,6 +1090,9 @@ These options control how LTspice generates netlists from schematics:
 ---
 
 *See also: [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for dot commands*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -1847,9 +1900,43 @@ Parametric instantiation with string expression:
 X1 in out 0 {name} top=9K bot=1K
 ```
 
+### Pin Name Annotation (`;§pnba`)
+
+Subcircuit instances generated by the LTspice netlister may end with a special comment that records the pin names of the symbol. The comment begins with `;§pnba` followed by a list of pin names delimited by a right parenthesis `)`.
+
+```spice
+X§U1 0 N001 NC_01 N004 NC_02 N003 N002 NC_03 IN IN LT8609S ;§pnba GND)SW)INTVcc)RT)SYNC)FB)TR/SS)PG)VIN)EN/UV
+```
+
+When present:
+
+- The pin names appear in the **same order** as the node (net) assignments on the instance line.
+- Each pin name maps positionally to a node: the first pin name corresponds to the first node, the second to the second, and so on.
+- The names are the labels on the symbol's pins, letting you recover the symbolic meaning of each net connection.
+
+In the example above, the mapping is:
+
+| Node | Pin Name |
+|------|----------|
+| `0` | GND |
+| `N001` | SW |
+| `NC_01` | INTVcc |
+| `N004` | RT |
+| `NC_02` | SYNC |
+| `N003` | FB |
+| `N002` | TR/SS |
+| `NC_03` | PG |
+| `IN` | VIN |
+| `IN` | EN/UV |
+
+Because `;§pnba` is introduced by `;`, it is an ordinary comment and is ignored by the simulator — it exists purely to preserve the symbol pin names alongside the net assignments.
+
 ---
 
 *See also: [SPICE-SYNTAX-REFERENCE.md](SPICE-SYNTAX-REFERENCE.md) for netlist conventions, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for dot commands*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -2569,6 +2656,9 @@ Automatically included in schematics. Enables cross-probing pin currents by clic
 ---
 
 *See also: [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for convergence options*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -2945,6 +3035,9 @@ During transient analysis, press the **`0` key** to discard past waveform data a
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .OPTIONS details, [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component parameters*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -3686,6 +3779,10 @@ Accel, Algorex, Allegro, Applicon Bravo, Applicon Leap, Cadnetix, Calay, Calay90
 - Create custom symbols matching your PCB tool's expected pin order if needed
 - Different packages may have different pin assignments
 
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
+
 
 ---
 
@@ -3983,6 +4080,9 @@ Helmut Sennewald's free utility (http://groups.io/g/LTspice) supports data manip
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE automated measurements, [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for compression settings*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -4250,6 +4350,9 @@ LTspice can run PSpice semiconductor and behavioral models. Standard SPICE model
 ---
 
 *See also: [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component syntax and model parameters, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MODEL and .LIB directives*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -4452,6 +4555,9 @@ conn.close()
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE syntax and examples*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -5195,6 +5301,8 @@ low_freq_noise_density: V(onoise) =1.47854748889e-07 at 1
 
 ---
 
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
+
 
 ---
 
@@ -5426,6 +5534,9 @@ The groups.io Files section contains tutorials, additional component libraries, 
 ---
 
 *See also: [TROUBLESHOOTING-GUIDE.md](TROUBLESHOOTING-GUIDE.md) for convergence solutions, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .FRA command details*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
 ---
@@ -5639,3 +5750,6 @@ Use the **LTspice** button on the schematic page within LTpowerCAD. The export p
 ---
 
 *See also: [DEVICE-MODELS-GUIDE.md](DEVICE-MODELS-GUIDE.md) for working with ADI SPICE models in LTspice, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for simulation command syntax*
+---
+
+*Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

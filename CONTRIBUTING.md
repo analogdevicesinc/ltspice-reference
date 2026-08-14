@@ -10,9 +10,8 @@ The Markdown files in [`ai_ref/`](ai_ref/) are consumed **two ways at once**:
 
 1. **Rendered** as the GitHub Pages site:
    <https://analogdevicesinc.github.io/ltspice-reference/>
-2. **Copied verbatim** onto users' machines by LTspice's `-init_ai_ref` command
-   (see [`ai_ref/init_ai_ref.ps1`](ai_ref/init_ai_ref.ps1)), where local AI
-   assistants read the raw `.md` files for guidance.
+2. **Served to local AI assistants** through LTspice's integrated MCP server,
+   which exposes the raw `.md` files as reference resources for guidance.
 
 Every edit must therefore work in **both** contexts:
 
