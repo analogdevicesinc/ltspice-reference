@@ -2436,7 +2436,7 @@ Control simulator tolerances, integration method, waveform compression, and diag
 | Option | Default | Description |
 |--------|---------|-------------|
 | numdgt | 6 | Significant digits (>6 = double precision) |
-| measdgt | 6 | .MEASURE output digits |
+| measdgt | 12 | .MEASURE output digits |
 | list | off | Expanded netlist in log |
 | logparams | off | All parameters in log |
 | logopinfo | off | Semiconductor OP info in log |
