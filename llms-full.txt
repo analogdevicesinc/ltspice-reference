@@ -2405,7 +2405,7 @@ Control simulator tolerances, integration method, waveform compression, and diag
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| maxstep | Infinite | Maximum transient step size |
+| maxstep | Tstop/1024 | Maximum transient step size |
 | solver | — | Matrix solver: "norm" or "alt" |
 
 #### Waveform Compression
