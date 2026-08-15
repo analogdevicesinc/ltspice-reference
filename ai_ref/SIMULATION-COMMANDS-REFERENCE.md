@@ -126,12 +126,11 @@ Small-signal AC analysis linearized about the DC operating point.
 
 ### .DC — DC Sweep
 
-Sweeps DC value of one or more sources. Up to 3 nested sweeps.
+Sweeps the DC value of one or more independent sources. Up to 3 nested sweeps.
 
 ```spice
-.dc <srcnam> <start> <stop> <incr>
-.dc [oct|dec|lin] <srcnam> <start> <stop> <incr>
-.dc <srcnam> list <val1> [<val2> ...]
+.dc [oct|dec|lin] <srcnam> <start> <stop> <incr|points>
+.dc <srcnam> list <val1> <val2> [<val3> ...]
 .dc <srcnam> file=<filename>
 ```
 
@@ -144,7 +143,9 @@ Sweeps DC value of one or more sources. Up to 3 nested sweeps.
 ```spice
 .dc V1 0 5 0.1
 .dc Vds 3.5 0 -0.05 Vgs 0 3.5 0.5
-.dc dec R1 1K 1Meg 10
+.dc I1 0 2m 0.1m
+.dc V1 list 1 2.5 5
+.dc dec V1 1 100 10
 ```
 
 ---

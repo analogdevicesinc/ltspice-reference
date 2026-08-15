@@ -434,6 +434,33 @@ C:\path\to\circuit.net(5): This results in only one step.
 See [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md#step--parameter-sweeps)
 for the full `.step` grammar.
 
+### .DC Rejected Before Simulating
+
+`.dc` enforces the same two-point minimum, but reports it with different wording
+than `.step`. It also accepts a narrower set of sweep items.
+
+| Error Message | Cause | Example |
+|---------------|-------|---------|
+| `This sweep spec results in only one point.` | Single `list` value, or `start` equal to `stop` | `.dc V1 list 1` |
+| `Only duplicate values listed.` | All `list` values identical | `.dc V1 list 1 1` |
+| `Increment must not be zero.` | Zero increment | `.dc V1 0 2 0` |
+| `Expected list of expressions/numbers here.` | `list` with no values | `.dc V1 list` |
+| `DC sweep source must be an independent source.` | Sweeping a passive component | `.dc R1 1k 3k 1k` |
+| `Expected expression or literal here.` | `param`/model form, or `oct\|dec\|lin` after the source | `.dc param Rx 1k 3k 1k` |
+| `syntax error` | More than 3 nested sweeps | `.dc V1 … V2 … V3 … V4 …` |
+
+**Fixes**:
+
+- Sweep an **independent source** (`V…`/`I…`) or `temp`. To sweep a resistance or
+  a model parameter, use `.step` — `.dc` has no `param` or model-parameter form.
+- Give `list` two or more distinct values, make `start` and `stop` differ, and use
+  a non-zero increment.
+- Place `oct|dec|lin` before the source name: `.dc dec V1 1 100 10`.
+- Keep nested sweeps to 3 or fewer.
+
+See [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md#dc--dc-sweep)
+for the full `.dc` grammar.
+
 ---
 
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .OPTIONS details, [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component parameters*
