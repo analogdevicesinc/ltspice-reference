@@ -27,7 +27,7 @@
 - [Waveform Viewer Guide](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/WAVEFORM-VIEWER-GUIDE.md): Viewing results, probing, arithmetic, FFT, export.
 - [Device Models Guide](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/DEVICE-MODELS-GUIDE.md): MOSFET/inductor/opamp models, third-party integration.
 - [.MEAS Database Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/MEASURE-DATABASE-REFERENCE.md): .MEAS SQLite database schema, querying results.
-- [.MEAS Statement Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/MEAS-REFERENCE.md): .MEAS statement examples for AC, transient, and DC analysis.
+- [.MEAS Statement Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/MEAS-REFERENCE.md): .MEAS examples for AC and noise, with expected log output.
 - [FAQ and Tips](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/FAQ-AND-TIPS.md): Updates, license, Linux, efficiency, SMPS Bode plots.
 - [ADI Design Tools Reference](https://raw.githubusercontent.com/analogdevicesinc/ltspice-reference/main/ai_ref/ADI-DESIGN-TOOLS-REFERENCE.md): ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics.
 

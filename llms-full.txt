@@ -83,7 +83,7 @@ LTspice.exe "C:\Projects\MyCircuit\filter.asc"
 | [WAVEFORM-VIEWER-GUIDE.md](WAVEFORM-VIEWER-GUIDE.md) | Viewing results, probing, arithmetic, FFT, export |
 | [DEVICE-MODELS-GUIDE.md](DEVICE-MODELS-GUIDE.md) | MOSFET/inductor/opamp models, third-party integration |
 | [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md) | .MEAS SQLite database schema, querying results |
-| [MEAS-REFERENCE.md](MEAS-REFERENCE.md) | .MEAS statement examples for AC, transient, and DC analysis |
+| [MEAS-REFERENCE.md](MEAS-REFERENCE.md) | .MEAS examples for AC and noise, with expected log output |
 | [FAQ-AND-TIPS.md](FAQ-AND-TIPS.md) | Updates, license, Linux, efficiency, SMPS Bode plots |
 | [ADI-DESIGN-TOOLS-REFERENCE.md](ADI-DESIGN-TOOLS-REFERENCE.md) | ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics |
 
@@ -689,6 +689,9 @@ Within each menu, underlined letters (mnemonics) can be pressed directly without
   - Resistor
 - **Save** (Ctrl+S) — Save current file
 - **Save As...** (Ctrl+Shift+S) — Save with new filename
+- **Execute .MEAS Script** — Run a script of `.MEAS` statements against the displayed
+  waveform data, without re-simulating. Requires the **waveform window** to be the
+  active window.
 - **Close** (Ctrl+W) — Close current file
 - **Print** (Ctrl+P)
 - **Print Preview** (V)
@@ -830,6 +833,22 @@ Within each menu, underlined letters (mnemonics) can be pressed directly without
 - **Open Plot Settings File...** (O) — Load saved plot configuration
 - **Reload Plot Settings** (Ctrl-Space)
 - **Edit Plot Defs File**
+
+
+### Notes & Annotations Submenu (Waveform Viewer)
+
+- **Label Curs. Pos.** — Place a label showing the current cursor position
+- **Annotate Phase Margin** — Annotate the phase margin on the plot
+- **Annotate Gain Margin** — Annotate the gain margin on the plot
+- **Annotate Steps** — Show a legend identifying the stepped parameter runs
+- **Place Text** — Add a free-form text note to the plot
+- **Draw Arrow** — Draw an arrow annotation
+- **Draw Line** — Draw a straight line annotation
+- **Draw Box** — Draw a rectangle annotation
+- **Draw Ellipse** — Draw an ellipse annotation
+- **Line Style/Color** — Set line style and color used for annotations
+- **Move** — Move an existing annotation
+- **Stretch** — Stretch/resize an existing annotation
 
 
 
@@ -1933,6 +1952,146 @@ Because `;§pnba` is introduced by `;`, it is an ordinary comment and is ignored
 
 ---
 
+## @ — Frequency Response Analyzer
+
+**Symbols**: FRA
+
+```spice
+@xxx in out [zm] fstart=<val> fend=<val> [delay=<val>] [oct=<val>] [fcoarse=<val>]
++ [nmax=<val>] [[pp0=<val>] [[pp1=<val>] [f0=<val> f1=<val>]]] [tavgmin=<val>]
++ [tsettle=<val>] [rpar=<val>] [flist=<values>] [acmag=<val>] [acphase=<val>]
++ [refnode=<netname>] [intnode=<netname>]
+```
+
+During a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the analyzer applies a range of sinusoidal stimuli and measures the circuit response. Used to analyze loop gain versus frequency or impedance versus frequency. For a step-by-step procedure using this device, see [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra).
+
+**Analysis mode**:
+
+- Default — **gain analysis**: applies voltage stimuli and analyzes the absolute voltage at each terminal.
+- With the `zm` keyword — **impedance analysis**: applies current stimuli and analyzes the voltage *across* the terminals.
+
+**Example**:
+```spice
+@1 A B delay=1m fstart=1k fend=500k oct=1 fcoarse=10k nmax=1 pp0=2m pp1=1m f0=1k f1=2k tavgmin=100u tsettle=200u
+```
+
+### Analysis Frequencies
+
+Frequency is stepped from `fstart` to `fend` at a resolution set by `oct`, the number of points per octave — `oct=1` doubles the stimulus frequency at every step.
+
+`fcoarse` forces coarse stepping (*maximum* one point per octave, `oct<=1`) below the given frequency; the `oct` setting then applies only above it. Setting `fcoarse` to 2–10× `fstart` can greatly reduce simulation time.
+
+`flist` applies a list of specific frequencies individually instead of sweeping.
+
+### Stimulus Amplitude
+
+Amplitude may be specified by one of three methods:
+
+| Method | Behavior |
+|--------|----------|
+| `pp0` alone | Sets one stimulus amplitude across all frequencies. |
+| `pp0`, `pp1`, `f0`, `f1` | Amplitude is `pp0` up to `f0`, `pp1` above `f1`, and logarithmically interpolated between `(f0, pp0)` and `(f1, pp1)`. **Recommended for most circuits.** |
+| `pp` | Piecewise logarithmic amplitude vs. frequency, as space-delimited frequency-voltage pairs. `pp=1k 10m 10k 1m` is equivalent to `f0=1k pp0=10m f1=10k pp1=1m`. |
+
+Typically `pp0 > pp1` — a larger stimulus at low frequencies, where high loop gain suppresses the injected perturbation, and a smaller one at high frequencies, where the loop no longer attenuates it and too much drive would disturb the operating point.
+
+### Simultaneous Harmonic Injection
+
+To reduce simulation time, the FRA device may inject a sinusoid and several of its harmonics simultaneously. `nmax` sets the maximum number of overlaid simultaneous sinusoids per stimulus, given either as an integer or as piecewise-logarithmic frequency-value pairs.
+
+**`nmax` defaults to 1 (no harmonic injection), and generally should be left there.** Injecting harmonics alongside the fundamental means any harmonic distortion the circuit itself produces lands on exactly the frequencies being measured, where it cannot be distinguished from the real response. Raise `nmax` above 1 only when you are specifically trying to speed up a simulation whose setup is already known to be good — never while still validating a measurement.
+
+When you do raise it:
+
+- Higher `nmax` reduces simulation time but may reduce accuracy; `nmax=2` is a reasonable first step, and beyond `nmax=4` there is generally little further benefit.
+- LTspice automatically scales the total amplitude to the specified `pp*` value.
+- Compare the result against an `nmax=1` run to confirm the speed-up has not changed the answer.
+
+### Timing
+
+- **`tavgmin`** — minimum time each sinusoid is analyzed. For each applied frequency, if `1/f < tavgmin`, the analysis time is increased in integer period increments until it exceeds `tavgmin`. For an SMPS, a good starting point is `100/fsw`, where `fsw` is the switching frequency.
+- **`tsettle`** — time between a stimulus first being applied and analysis beginning. A good starting point is `2/fcross`, where `fcross` is the approximate expected 0 dB crossover frequency. Defaults to `10/fend`.
+- **`delay`** — time at which the analyzer applies its first stimulus. Set it long enough for the circuit to reach steady state before stimulus begins: measuring during start-up or while the output is still settling perturbs an operating point that is itself still moving, giving a meaningless loop gain. Determine the settling time from the plain `.tran` run of Step 1 in the [SMPS Bode plot procedure](FAQ-AND-TIPS.md#smps-bode-plots-fra) and set `delay` beyond it.
+
+### Alternate Measurement Nodes
+
+- **`refnode`** — measures the `in` and `out` node voltages relative to `refnode` instead of ground. This allows FRA to be used on, for example, circuits that regulate current via the voltage across a sense resistor. Not applicable to impedance analysis.
+
+  **The [`&` probe device](#--frequency-response-analysis-probe) is generally preferred over `refnode`.** Both address the same differential-feedback cases, but the probe takes an explicit differential pair at each end (`o+`/`o-` and `i+`/`i-`) instead of redefining the reference for the analyzer's own terminals, and it adds measurement points without altering how the loop is broken.
+- **`intnode`** — specifies an intermediate node for an additional gain analysis, useful for analyzing the external compensation point of a regulator. Gain is calculated from the FRA device to `intnode`, and the complex value is included in the raw output file so it can be plotted in the waveform viewer. To measure gain between arbitrary *differential* point pairs rather than to a single node, use the [`&` probe device](#--frequency-response-analysis-probe).
+
+### Results and Bode Plot
+
+When simulated in the GUI, LTspice opens a Bode plot and may populate it automatically — but only in two configurations, which depend both on the FRA device's terminals and on how many [`&` probes](#--frequency-response-analysis-probe) are in the circuit:
+
+| FRA device terminals | `&` probes in circuit | Auto-plotted trace |
+|----------------------|-----------------------|--------------------|
+| Neither grounded | none | one trace per `@` FRA device |
+| One grounded | exactly one | that probe's trace |
+| Neither grounded | one or more | none — blank Bode plot |
+| One grounded | none, or more than one | none — blank Bode plot |
+
+A blank Bode plot does not mean the analysis failed: the results are in the raw output file either way, and the traces can be added manually. Check the FRA device's terminals and the probe count against the table above before looking for a problem in the circuit.
+
+### Parameters
+
+| Parameter | Description | Units | Default |
+|-----------|-------------|-------|---------|
+| delay | Stimulus start time | sec | 0 |
+| fstart | Frequency sweep start value | Hz | — |
+| fend | Frequency sweep end value | Hz | — |
+| oct | Points per octave for sweep resolution. Supported values: 0.25, 0.5, 1, 2, 3, 4 | — | 4 |
+| fcoarse | Upper frequency for coarse stepping in the sweep | Hz | — |
+| flist | List of specific frequencies (applied individually) | Hz | — |
+| nmax | Maximum number of simultaneously injected harmonic frequencies | — | 1 |
+| pp0 | Stimulus amplitude for frequencies below `f0` (if specified) | V (gain) / A (impedance) | 1mV (gain) / 10mA (impedance) |
+| pp1 | Stimulus amplitude for frequencies above `f1` | V (gain) / A (impedance) | — |
+| f0 | Maximum frequency for `pp0` | Hz | — |
+| f1 | Minimum frequency for `pp1` | Hz | — |
+| pp | Piecewise logarithmic amplitude vs. frequency | Hz,V pairs | — |
+| tavgmin | Minimum analysis time for each stimulus frequency | sec | 0 |
+| tsettle | Settling time at each frequency before analysis begins | sec | 10/fend |
+| rpar | Parallel resistance | Ohm | 1m (gain) / 1T (impedance) |
+| acmag | AC current magnitude (`.ac` simulations only) | A | 0 |
+| acphase | AC current phase (`.ac` simulations only) | degrees | 0 |
+| ac | AC current magnitude, phase pair (`.ac` simulations only) | A,degrees | 0,0 |
+| enabled | Analyzer enable (0 or 1) | — | 1 |
+| refnode | Reference node for voltage gain analysis | — | 0 |
+| intnode | Intermediate node for additional gain analysis | — | — |
+
+---
+
+## & — Frequency Response Analysis Probe
+
+**Symbols**: FRAPROBE
+
+```spice
+&xxx o+ o- i+ i-
+```
+
+Used in conjunction with an [`@` Frequency Response Analyzer](#--frequency-response-analyzer) during a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the probe analyzes gain between any two differential points. It accepts no control parameters — the stimulus is controlled entirely by the FRA device.
+
+**Result**: the complex quantity `V(o+,o-) / V(i+,i-)` versus frequency, written to the FRA complex raw output file `<circuit>.fra_<fra_instance_name>.raw` as a signal named `probe_<fraprobe_instance_name>`. Whether that signal is plotted automatically depends on the FRA device's terminals and how many probes are present — see [Results and Bode Plot](#results-and-bode-plot).
+
+The differential input and output pairs suit applications such as the following, each with an example schematic in **File > Open Examples > Educational\FRA\**:
+
+- SMPS micromodules with integrated top feedback resistors — `fra_eg8_ltm8074_probe.asc`
+- Analyzing the gain of an intermediate portion of a control loop — for example from the compensation point of an SMPS to the output, known as the modulator gain — `&mod` in `fra_eg6_LT3763_probe_current.asc`, which measures from the compensation point VC to the output current sense
+- Differential feedback, such as current-feedback circuits — `&1` in the same example, taken differentially across the output current sense resistor
+- Inverting (negative output) SMPS circuits — `fra_eg10_LT8609_inverting_probe.asc`
+
+For differential feedback, prefer this device over the FRA device's [`refnode`](#--frequency-response-analyzer) parameter.
+
+### Multiple Loops and Probes
+
+A circuit with more than one feedback loop can have its loops analyzed simultaneously by configuring a separate FRA device for each independent loop.
+
+Probes may also be used in simulations with multiple FRA devices, but **each probe must be associated with a specific FRA device, and LTspice makes that association by instance name** — `&1` pairs with `@1`, `&2` with `@2`, and so on.
+
+**Examples**: in that same directory, any schematic with "probe" in the filename demonstrates the probe device.
+
+---
+
 *See also: [SPICE-SYNTAX-REFERENCE.md](SPICE-SYNTAX-REFERENCE.md) for netlist conventions, [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for dot commands*
 ---
 
@@ -2114,7 +2273,7 @@ DC small-signal transfer function analysis.
 
 ### .FRA — Frequency Response Analysis
 
-Time-domain frequency response analysis for feedback loops (e.g., SMPS stability). Requires FRA device instance (prefix `@`).
+Time-domain frequency response analysis for feedback loops (e.g., SMPS stability). Requires an FRA device instance (prefix `@`) — the sweep range, stimulus amplitude and timing are all set on that device, not on this command. See [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer) for its parameters. Optional [FRA probe devices](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analysis-probe) (prefix `&`) add differential measurement points to the same run, and a circuit with multiple independent loops can use one FRA device per loop.
 
 ```spice
 .fra [Tstart=<val>] [dTmax=<val>] [Tstep=<val>] [Tstop=<val>]
@@ -2122,6 +2281,33 @@ Time-domain frequency response analysis for feedback loops (e.g., SMPS stability
 ```
 
 All parameters optional, specified by keyword. FRA automatically stops when all FRA devices complete analysis.
+
+**Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)** rather than configuring the analysis from scratch. A valid measurement depends on device settings that have to be established in order — a `delay` long enough to reach steady state, a stimulus amplitude that does not disturb the operating point, and adequate settling and averaging time at each frequency. Misset, they yield a plausible-looking Bode plot that is simply wrong.
+
+**Measurements on FRA data**: an `.fra` run *is* a transient run — its `.raw` file reports
+`Transient Analysis` with `time` as the x-axis — so `.meas TRAN` statements placed in the
+circuit work directly, alongside the frequency-response results. No separate `.tran`
+simulation is needed to get ripple, overshoot, or average figures out of the same run.
+
+Window the measurement, though. With no range given it spans the whole FRA sweep, which is
+dominated by the stimulus the FRA device injects; use `FROM`/`TO` (or `TRIG`/`TARG`) to
+restrict it. The interval before the device's `delay` is still unperturbed.
+
+```spice
+.meas TRAN vout_pp   PP V(out)                 ; whole sweep — includes FRA stimulus
+.meas TRAN quiescent PP V(out) FROM 0 TO 100u  ; before delay=100u — stimulus not yet applied
+```
+
+**`.meas AC` does not work on FRA results.** Every `.meas` statement in an FRA circuit is
+evaluated against the transient data, so a `.meas AC` directive on an FRA schematic is
+**silently discarded** — it produces no result, no warning, and no mention of the
+measurement name anywhere in the log. There is no way to measure the frequency-domain
+(Bode) data from a directive in the circuit.
+
+To measure the Bode data, run the measurements against the FRA plot from the waveform
+window instead: make the FRA plot the active window and use **File > Execute .MEAS
+Script** (see [.MEASURE](#measure--user-defined-measurements)). That is the only route to
+`.meas` results on the frequency response LTspice extracts from the time-domain run.
 
 See: File > Open Examples > Educational\FRA\
 
@@ -2195,6 +2381,8 @@ Post-processing command to extract measurements from simulation results.
 .meas NOISE total_noise INTEG V(onoise)
 ```
 
+**Worked examples**: [MEAS-REFERENCE.md](MEAS-REFERENCE.md) has complete netlists paired with the log output they produce, covering AC and noise measurements in depth.
+
 **Output**: Results in .log file. With `.step`, results form tables. Data saved to SQLite `.db` file (see [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md)).
 
 **Note**: The output of one `.meas` statement can be used in other `.meas` statements (e.g., `PARAM Trise*2` references the `Trise` measurement).
@@ -2205,6 +2393,19 @@ Post-processing command to extract measurements from simulation results.
 3. Execute **Plot .step'ed .meas data** from the context menu
 
 This plots the `.MEAS` results as waveforms indexed by step parameter value.
+
+**Running .MEAS on an existing dataset (no re-simulation)**: `.meas` statements are
+evaluated entirely in post processing, so a script of them can be executed against
+waveform data already on disk. Make the **waveform window** the active window, then use
+**File > Execute .MEAS Script**. This avoids re-running the simulation just to add or
+change a measurement. The script file may be an ordinary netlist — everything except the
+`.meas` statements is ignored, so the circuit's own `.net`/`.cir` file can be used
+directly.
+
+**Accuracy caveat**: because `.meas` reads the saved waveform data, its accuracy is
+limited by that data *after* compression. Disable or loosen compression
+(`.options plotwinsize=0`) for more precise `.meas` output — see
+[Waveform Compression](#waveform-compression).
 
 ---
 
@@ -2691,7 +2892,7 @@ Diagnosing and fixing convergence failures, performance issues, and common simul
 
 ## Diagnostic Information Collection
 
-When troubleshooting LTspice issues (especially FRA, convergence, or model-related problems), collect this diagnostic information first:
+When troubleshooting LTspice issues (especially [FRA](#blank-bode-plot-after-fra), convergence, or model-related problems), collect this diagnostic information first:
 
 ### 1. LTspice Version
 - Go to **Help → About LTspice**
@@ -2972,6 +3173,8 @@ Turn off compression (`plotwinsize=0`) when:
 - Using `.four` statements
 - Doing FFT in post-analysis
 - Need exact sample-by-sample data
+- Precise `.meas` results are required — `.meas` runs in post processing on the saved
+  waveform data, so its accuracy is limited by that data after compression
 
 ```spice
 .options plotwinsize=0
@@ -3122,6 +3325,28 @@ for the full `.dc` grammar.
 
 ---
 
+## Blank Bode Plot After .FRA
+
+Unlike the sweep errors above, a blank Bode plot usually means the run **succeeded**.
+The results are in `<circuit>.fra_<fra_instance_name>.raw`; only the automatic trace
+selection declined to pick anything.
+
+LTspice auto-plots a trace in just two configurations, and every other combination of
+grounded FRA terminal and probe count leaves the plot blank. Check the `@` device's
+terminals and the number of `&` probes against the
+[auto-plot table](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer), then add
+what you need by hand with **View > Add Trace** (A) — the FRA device's own trace, or
+`probe_<fraprobe_instance_name>` for a probe.
+
+**The other FRA failure mode looks nothing like this.** A Bode plot that appears complete
+and plausible can still be wrong — when `delay`, stimulus amplitude, `tsettle`, or
+`tavgmin` are misset, or when the FRA device does not interrupt every feedback path.
+Nothing reports it. Work through
+[SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra) in order rather than trusting
+the first plot that appears.
+
+---
+
 *See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .OPTIONS details, [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md) for component parameters*
 ---
 
@@ -3143,14 +3368,18 @@ This guide documents the `.asc` schematic file format used by LTspice, based on 
 An `.asc` file is a plain-text file describing an LTspice schematic. The first line declares the format version:
 
 ```
-Version 4
+Version 4.1
 ```
+
+LTspice 24 writes `Version 4.1`. Older files carry `Version 4` and still load unchanged. **Emit `Version 4.1` for newly generated schematics**, and leave the existing value alone when editing a file in place.
 
 The second line defines the sheet number and drawing area (width x height):
 
 ```
 SHEET 1 2580 1252
 ```
+
+The sheet bounds only control the default view and printable area — elements may sit at negative coordinates or beyond the stated size. 
 
 The remainder consists of element declarations using these keywords:
 
@@ -3175,7 +3404,7 @@ The remainder consists of element declarations using these keywords:
 **When editing `.asc` files programmatically:**
 - The file MUST be read and written as raw bytes or using Windows-1252 encoding.
 - Do NOT re-encode the file as UTF-8. This corrupts `0xB5` (µ) into the 3-byte UTF-8 replacement character `EF BF BD` (U+FFFD), which LTspice cannot parse.
-- If your editor or tool only supports UTF-8, replace `µ` with the letter `u` in component values (e.g., `2.2u` instead of `2.2µ`). LTspice treats `u` as the micro multiplier in netlist values.
+- **Write `u` rather than `µ` in any value you author** (`2.2u`, not `2.2µ`) — unconditionally, not only when the tooling forces it. LTspice treats `u` as the micro multiplier, and an all-ASCII file cannot be corrupted this way. See [Value Notation](#value-notation).
 - Other non-ASCII bytes that may appear: `0xB0` (°) in temperature values, `0xB2` (²) in annotations.
 
 **Do NOT edit .asc files with `replace_string_in_file`, `multi_replace_string_in_file`, `create_file`, or any other text tool that assumes UTF-8 encoding. These tools WILL corrupt µ (0xB5) and other Windows-1252 characters.** Use a Python script with `encoding='latin-1'` to make modifications, or re-copy the original and apply changes programmatically.
@@ -3194,30 +3423,125 @@ The remainder consists of element declarations using these keywords:
 
 ### Pin World-Coordinate Calculation
 
-A `SYMBOL` placed at `(sx, sy)` has pin world-coordinates determined by applying the rotation transform to each pin's local offset `(px, py)` from the `.asy` file:
+A `SYMBOL` placed at `(sx, sy)` has pin world-coordinates determined by applying the orientation transform to each pin's local offset `(px, py)` from the `.asy` file:
 
-| Rotation | world_x | world_y |
-|----------|---------|---------|
-| R0 | sx + px | sy + py |
-| R90 | sx - py | sy + px |
+| Orientation | world_x | world_y |
+|-------------|---------|---------|
+| R0   | sx + px | sy + py |
+| R90  | sx - py | sy + px |
 | R180 | sx - px | sy - py |
 | R270 | sx + py | sy - px |
+| M0   | sx - px | sy + py |
+| M90  | sx + py | sy + px |
+| M180 | sx + px | sy - py |
+| M270 | sx - py | sy - px |
 
-For mirror orientations (M0, M90, M180, M270), first negate px (flip horizontally), then apply the corresponding rotation formula above.
+**Mirror order matters — rotate first, then flip horizontally.** The mirrored rows above are the rotation result with its *relative* x negated, not the rotation applied to a pre-negated `px`. The two orders happen to agree for M0 and M180, but they disagree for M90 and M270, so the shortcut "negate px, then rotate" silently produces wrong coordinates on half the mirror cases.
+
+Mirroring also swaps which pin lands left versus right, so re-derive every pin after changing orientation rather than assuming the previous left/right assignment still holds.
 
 ### Standard Symbol Pin Offsets (local coordinates from .asy files)
 
-| Symbol | Pin 1 (name) | Pin 1 (px, py) | Pin 2 (name) | Pin 2 (px, py) | Pin 3 | Pin 3 (px, py) |
-|--------|--------------|----------------|--------------|----------------|-------|----------------|
-| `cap` | A (+) | (16, 0) | B (-) | (16, 64) | — | — |
-| `res` | A | (16, 16) | B | (16, 96) | — | — |
-| `ind` | A | (16, 16) | B | (16, 96) | — | — |
-| `voltage` | + | (0, 16) | - | (0, 96) | — | — |
-| `current` | + | (0, 0) | - | (0, 80) | — | — |
-| `diode` | + (anode) | (16, 0) | - (cathode) | (16, 64) | — | — |
-| `npn` | C | (64, 0) | B | (0, 48) | E | (64, 96) |
-| `nmos` | D | (48, 0) | G | (0, 80) | S | (48, 96) |
-| `sw` | A | (0, 16) | B | (0, 96) | NC+ | (-48, 80) |
+Each pin is listed as `name[n] = (px, py)`, where `n` is the **SPICE netlist order** — the position the pin occupies on the generated netlist line. Placement alone does not tell you node order, so for any device with three or more pins the bracketed number is what matters.
+
+| Symbol | Prefix | Pins |
+|--------|--------|------|
+| `res` | R | `A[1]=(16,16)`  `B[2]=(16,96)` |
+| `res2` | R | `A[1]=(16,0)`  `B[2]=(16,64)` |
+| `ind`, `ind2` | L | `A[1]=(16,16)`  `B[2]=(16,96)` |
+| `cap` | C | `A[1]=(16,0)`  `B[2]=(16,64)` |
+| `polcap` | C | `A[1]=(16,0)`  `B[2]=(16,64)` |
+| `voltage` | V | `+[1]=(0,16)`  `-[2]=(0,96)` |
+| `current` | I | `+[1]=(0,0)`  `-[2]=(0,80)` |
+| `diode`, `schottky`, `zener`, `LED` | D | `+[1]=(16,0)`  `-[2]=(16,64)` |
+| `npn`, `npn2`, `npn3` | QN | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)` |
+| `npn4` | QN | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)`  `S[4]=(64,48)` |
+| `pnp`, `pnp2` | QP | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)` |
+| `pnp4` | QP | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)`  `S[4]=(64,48)` |
+| `lpnp` | QP | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)`  `S[4]=(64,48)` |
+| `nmos` | MN | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)` |
+| `pmos` | MP | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)` |
+| `nmos4` | MN | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)`  `B[4]=(48,48)` |
+| `pmos4` | MP | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)`  `B[4]=(48,48)` |
+| `njf` | JN | `D[1]=(48,0)`  `G[2]=(0,64)`  `S[3]=(48,96)` |
+| `pjf` | JP | `D[1]=(48,0)`  `G[2]=(0,64)`  `S[3]=(48,96)` |
+| `mesfet` | Z | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)` |
+| `sw` | S | `A[1]=(0,16)`  `B[2]=(0,96)`  `NC+[3]=(-48,80)`  `NC-[4]=(-48,32)` |
+| `csw` | W | `+[1]=(0,0)`  `-[2]=(0,80)` |
+| `e` | E | `+[1]=(0,16)`  `-[2]=(0,96)`  `P[3]=(-48,32)`  `N[4]=(-48,80)` |
+| `e2` | E | `+[1]=(0,16)`  `-[2]=(0,96)`  `P[3]=(-48,80)`  `N[4]=(-48,32)` |
+| `f` | F | `+[1]=(0,0)`  `-[2]=(0,80)` |
+| `g` | G | `+[1]=(0,96)`  `-[2]=(0,16)`  `NC+[3]=(-48,32)`  `NC-[4]=(-48,80)` |
+| `g2` | G | `+[1]=(0,96)`  `-[2]=(0,16)`  `NC+[3]=(-48,80)`  `NC-[4]=(-48,32)` |
+| `h` | H | `+[1]=(0,16)`  `-[2]=(0,96)` |
+| `bv` | B | `+[1]=(0,16)`  `-[2]=(0,96)` |
+| `bi` | B | `+[1]=(0,0)`  `-[2]=(0,80)` |
+| `bi2` | B | `+[1]=(0,80)`  `-[2]=(0,0)` |
+| `tline` | T | `I1[1]=(-48,-16)`  `R1[2]=(-48,16)`  `I2[3]=(48,-16)`  `R2[4]=(48,16)` |
+| `ltline` | O | `I1[1]=(-48,-16)`  `R1[2]=(-48,16)`  `I2[3]=(48,-16)`  `R2[4]=(48,16)` |
+| `load` | I | `A[1]=(16,0)`  `B[2]=(16,64)` |
+| `load2` | I | `+[1]=(0,0)`  `-[2]=(0,80)` |
+| `FerriteBead`, `FerriteBead2` | L_Ferrite_Bead | `A[1]=(0,-32)`  `B[2]=(0,32)` |
+| `fra` | @ | `OUT[1]=(0,-64)`  `IN[2]=(0,0)` |
+| `fraprobe` | & | `O+[1]=(48,-80)`  `O[2]=(48,-16)`  `I+[3]=(-48,-80)`  `I[4]=(-48,-16)` |
+| `ISO16750-2`, `ISO7637-2` | X | `+[1]=(0,0)`  `-[2]=(0,80)` |
+
+**Traps in this table:**
+- `res2` does **not** share `res` pin offsets — it is 64 px between pins, not 80.
+- `g` and `g2` put `+` at the **bottom** (`py=96`) and `-` at the top (`py=16`), the reverse of `voltage`, `e`, `h`, and `bv`.
+- `bi2` likewise reverses `bi`: `+` is the **bottom** pin (`py=80`) and `-` the top (`py=0`). The two symbols look nearly identical on the sheet.
+- `e` / `e2` and `g` / `g2` differ *only* in whether the control pins are swapped; picking the wrong one inverts the controlling sense with no geometric hint.
+- `tline` / `ltline`, `FerriteBead`, `fra`, and `fraprobe` use **negative** `py`, so their bodies straddle or sit above the placement origin.
+- `polcap` pin names are `A` and `B`, not `+` and `-`, even though the body is drawn polarized. `A[1]` is the positive terminal.
+- The `ISO*` automotive transient sources netlist with prefix **`X`** (a subcircuit), not `V`.
+
+Symbols not tabulated here because their pin sets are large and application-specific — the `SOAtherm-*` thermal models in particular, which range from a single pin (`SOAtherm-PCB`: `Tcenter[1]=(0,0)`) to eight (`SOAtherm-NMOS`) — must be read from their `.asy` files.
+
+Anything not listed here: read the `PIN` and `PINATTR SpiceOrder` lines directly out of the part's `.asy` file under `%LOCALAPPDATA%\LTspice\lib\sym\` rather than guessing from a similar-looking part.
+
+**That directory is not flat.** Only the passives, sources, and primitives tabulated above sit in `sym\` itself; the vast majority of installed symbols are one or more levels down, so `sym\<name>.asy` will not resolve for a real device:
+
+| Subdirectory | Contents |
+|--------------|----------|
+| `PowerProducts\` | regulators, converters, gate drivers, PMICs |
+| `Contrib\` | third-party vendor libraries, **nested further** by vendor / family / package |
+| `opamps\` | op-amps |
+| `Switches\` | analog switches and multiplexers |
+| `SpecialFunctions\` | mixed-signal function blocks |
+| `misc\` | behavioural primitives, `SOAtherm-*`, oddments |
+| `References\` | voltage references |
+| `ADC\`, `DAC\`, `Comparators\`, `FilterProducts\`, `Optos\`, `digital\`, `externals\` | as named |
+
+The set of subdirectories varies with the install and with any vendor libraries added since, so treat the list as a starting point rather than a fixed inventory.
+
+Resolve a name by searching recursively rather than guessing the folder:
+
+```powershell
+Get-ChildItem "$env:LOCALAPPDATA\LTspice\lib\sym" -Recurse -Filter '<name>.asy'
+```
+
+The subdirectory is part of how the symbol is referenced, not just where it happens to be filed. A `SYMBOL` line carries the path relative to `sym\`, with each separator written as a **doubled** backslash:
+
+```
+SYMBOL Comparators\\LT1719 304 224 R0
+SYMBOL Contrib\\EPC\\EPC2204 464 -32 R0
+```
+
+Case is inconsistent in ADI's own example schematics (`opamps`, `Opamps`, and `OpAmps` all appear) because Windows path lookup is case-insensitive; match the directory as it exists on disk anyway.
+
+### Pin Span Reference
+
+Pin-to-pin distance drives whether two parts can sit on a shared pair of rails without a jog. Symbols with the same span but different offsets still align differently against the grid:
+
+| Span | Offsets | Symbols |
+|------|---------|---------|
+| 64 px | py 0 → 64 | `cap`, `polcap`, `res2`, `load`, `diode` family |
+| 64 px | py -32 → 32 | `FerriteBead`, `FerriteBead2` |
+| 64 px | py -64 → 0 | `fra` |
+| 80 px | py 0 → 80 | `current`, `csw`, `f`, `bi`, `bi2`, `load2`, `ISO16750-2`, `ISO7637-2` |
+| 80 px | py 16 → 96 | `res`, `ind`, `ind2`, `voltage`, `e`, `e2`, `g`, `g2`, `h`, `bv`, `sw` |
+
+The practical consequence: **`res` pins are 80 px apart while `cap` pins are 64 px apart.** Placing a capacitor in parallel with a resistor always leaves a 16 px shortfall to bridge.
 
 ### Rotation Examples
 
@@ -3233,44 +3557,78 @@ For mirror orientations (M0, M90, M180, M270), first negate px (flip horizontall
 - Pin A: (96 + 16, 112 + 0) = **(112, 112)** — top
 - Pin B: (96 + 16, 112 + 64) = **(112, 176)** — bottom
 
+**NPN in M0** (mirrored, base on the right): `SYMBOL npn 64 96 M0`
+- Pin C: (64 - 64, 96 + 0) = **(0, 96)**
+- Pin B: (64 - 0, 96 + 48) = **(64, 144)** — base now exits to the **right**
+- Pin E: (64 - 64, 96 + 96) = **(0, 192)**
+
+**NPN in M90**: `SYMBOL npn 64 96 M90`
+- Pin C: (64 + 0, 96 + 64) = **(64, 160)**
+- Pin B: (64 + 48, 96 + 0) = **(112, 96)**
+- Pin E: (64 + 96, 96 + 64) = **(160, 160)**
+
+Note how M90 uses `(sx + py, sy + px)`. Applying the "negate px first" shortcut would instead give C at (64, 32) — off by 128 px and connected to nothing.
+
 ### Complete Example: RC Low-Pass Filter
+
+This example is drawn to satisfy every rule in [Layout Quality Rules](#layout-quality-rules), so it can be copied as a starting template.
 
 ```
 Version 4.1
-SHEET 1 880 340
-WIRE -32 96 -48 96
-WIRE 16 96 -32 96
-WIRE 128 96 96 96
-WIRE 144 96 128 96
-WIRE -48 112 -48 96
-WIRE 144 112 144 96
-WIRE -48 208 -48 192
-WIRE 144 208 144 176
-FLAG -48 208 0
-FLAG 144 208 0
-FLAG -32 96 in
-FLAG 128 96 out
+SHEET 1 880 400
+WIRE -48 64 -48 112
+WIRE 80 64 -48 64
+WIRE 208 64 160 64
+WIRE 256 64 208 64
+WIRE 256 112 256 64
+WIRE -48 240 -48 192
+WIRE 256 240 256 176
+FLAG -48 64 in
+FLAG 208 64 out
+FLAG -48 240 0
+FLAG 256 240 0
 SYMBOL voltage -48 96 R0
 SYMATTR InstName V1
 SYMATTR Value AC 1
-SYMBOL cap 128 112 R0
-SYMATTR InstName C1
-SYMATTR Value 100n
-SYMBOL res 112 80 R90
-WINDOW 0 0 56 VBottom 2
-WINDOW 3 32 56 VTop 2
+SYMBOL res 176 48 R90
 SYMATTR InstName R1
 SYMATTR Value 1k
-TEXT -48 256 Left 2 !.ac dec 100 1 10Meg
+SYMBOL cap 240 112 R0
+SYMATTR InstName C1
+SYMATTR Value 100n
+TEXT -48 296 Left 2 !.ac dec 100 1 10Meg
 ```
 
+**Pin coordinates** (origin + transform from the tables above):
+
+| Part | Placement | Pin | World coordinate |
+|------|-----------|-----|------------------|
+| V1 | `voltage -48 96 R0` | `+` | (-48, 112) |
+| V1 | | `-` | (-48, 192) |
+| R1 | `res 176 48 R90` | `A` | (160, 64) |
+| R1 | | `B` | (80, 64) |
+| C1 | `cap 240 112 R0` | `A` | (256, 112) |
+| C1 | | `B` | (256, 176) |
+
 **Connection verification**:
-- V1 pin+ at (-48, 112) = R1 pin B at (-48, 112) → directly connected
-- R1 pin A at (32, 112) → wire endpoint of both `WIRE 32 112 -48 112` and `WIRE 112 112 32 112`
-- C1 pin A at (112, 112) → wire endpoint of `WIRE 112 112 32 112`
-- V1 pin- at (-48, 192) → wire endpoint of `WIRE -48 208 -48 192`
-- C1 pin B at (112, 176) → wire endpoint of `WIRE 112 208 112 176`
-- Ground flags at wire endpoints (-48, 208) and (112, 208)
+- V1 `+` (-48, 112) → `WIRE -48 64 -48 112`, a 48 px vertical exit stub carrying `FLAG -48 64 in`
+- R1 `B` (80, 64) → `WIRE 80 64 -48 64`, leaving horizontally (its pin direction) and turning down only at x = -48
+- R1 `A` (160, 64) → `WIRE 208 64 160 64`, 48 px horizontally to `FLAG 208 64 out`
+- C1 `A` (256, 112) → `WIRE 256 112 256 64`, a 48 px vertical stub meeting the rail at the corner (256, 64)
+- V1 `-` (-48, 192) → `WIRE -48 240 -48 192` → `FLAG -48 240 0`
+- C1 `B` (256, 176) → `WIRE 256 240 256 176` → `FLAG 256 240 0`
+- No wire joins R1 `A` to R1 `B` — a segment spanning both pins would short the resistor while still looking plausible on screen
+
+Resulting netlist:
+
+```spice
+V1 in 0 AC 1
+R1 out in 1k
+C1 out 0 100n
+.ac dec 100 1 10Meg
+```
+
+A -3 dB corner near 1.59 kHz. Note that R1 netlists as `out in`, not `in out`: in R90 the pin with SPICE order 1 (`A`) is the right-hand pin, which lands on `out`. Node order follows `SpiceOrder`, never left-to-right screen position.
 
 ### Caution: AI-Generated Schematic Modifications
 
@@ -3289,6 +3647,186 @@ Changes that only modify SYMATTR values (e.g., changing a component value or mod
 
 ---
 
+## Layout Quality Rules
+
+Connectivity correctness is necessary but not sufficient. A schematic can netlist perfectly and still be unreadable, and **none of the rules in this section are visible to the netlist** — a generated `.asc` will pass every connectivity check while violating all of them. These are what separate a drawing that looks hand-made from one that looks machine-emitted.
+
+| Rule | Value | Applies to |
+|------|-------|------------|
+| Grid unit | 16 px | everything |
+| Pin exit stub | ≥ 48 px (3 grids) **in the pin's own direction** | every pin |
+| Flag clearance | ≥ 48 px from the pin it serves | `FLAG`, ground and named |
+| Adjacent pin columns/rows | ≥ 96 px (6 grids) | parts sitting side by side |
+| Series gap along a rail | ≥ 48 px of clear wire | between consecutive devices |
+| Initial component spacing | ~256 px (16 grids) between origins | first placement pass |
+| Attribute text clearance | ≥ 16 px from the symbol outline | visible `WINDOW` text |
+| Directive line spacing | 32 px between `TEXT` baselines | the SPICE block |
+
+### Placement Strategy
+
+The rules below are constraints to satisfy; this is the process that satisfies them cheaply. Most layout pain comes from treating placement as a one-shot step and then trying to rescue it with wire.
+
+**Build in this order:**
+
+1. Place symbols using pin math, so the 48 px and 96 px targets are already met before any wire exists
+2. Route each pin's exit stub, then the rails that join the stubs
+3. Add flags on stubs, never on pins
+4. Place the SPICE directive block below the circuit
+5. Walk the [post-edit layout gate](#post-edit-layout-gate) pin by pin
+6. Confirm the netlist, then simulate
+
+**Routing is an input to placement, not an afterthought.** Decide roughly where the rails will run *before* committing symbol coordinates. A part positioned without regard to its wiring will need to move later anyway, and by then it has neighbours that also have to move.
+
+**Minimize bends.** Position parts so wire runs are straight. Each unnecessary direction change is a place the reader has to re-orient. Shifting a single part by one grid unit routinely removes two bends — for example, nudging a resistor up 16 px to put its pin on the same row as the rail it feeds.
+
+**Spacing values are floors, not targets.** The 48 px and 96 px numbers define a feasible region, not exact positions. Parts may slide freely within that region to straighten a wire run, and doing so is usually the right fix. Do not snap everything to exactly 96 px and then bend wire around the result.
+
+**Prefer moving parts over adding wire.** When a clearance rule fails, relocate the symbol on the 16 px grid. Patching the gap with extra jogged segments satisfies the arithmetic while making the drawing worse.
+
+**Iterate once placement is complete.** After everything is down and wired, do a deliberate refinement pass: look for bends that a small shift would remove, rails that are nearly but not quite aligned, and parts sitting at an arbitrary offset because that is simply where they landed. This pass is what makes a schematic look composed rather than assembled.
+
+### Composition Conventions
+
+The clearance rules above constrain individual parts. These conventions govern the drawing as a whole, and a schematic can satisfy every numeric rule while still reading as machine-emitted because it ignores them.
+
+**Signal flows left to right.** Input source at the left edge, load or output node at the right, intermediate stages in signal order between them. A reader should be able to trace the circuit without backtracking. Feedback paths are the exception and route right-to-left above or below the forward path.
+
+**Separate signal routing from ground routing.** Keep a dedicated horizontal ground bus below the circuit and bring every ground connection down to it, rather than scattering independent ground flags at whatever height each part happens to sit. Signal rails stay in the body of the drawing; the ground bus stays out of it.
+
+**Place symmetric circuits symmetrically.** Differential pairs, push-pull stages, bridge arms, and matched RC branches should be mirror images with equal-length wire segments on both sides. Unequal stub lengths on a matched pair are read as a schematic error even when the netlist is identical.
+
+**Leave room to modify.** Do not pack parts to the minimum clearances across the whole sheet. Leave clear space at the edges and between functional blocks so a later addition does not force a wholesale re-layout — the 96 px floor is what a crowded region may fall to, not the spacing to design toward.
+
+### Pin Exit Stub
+
+Every pin leaves its symbol with at least **48 px of wire in the same direction as the pin** before any 90° turn. Vertical pins stub up or down; horizontal pins (an R90/R270 part) stub left or right. Only after that stub may the wire turn to join a rail.
+
+**Never land a perpendicular bus directly on a pin.** This is the single most common generated-schematic tell — attaching a horizontal `OUT` rail straight onto a vertical resistor pin because it "looks like a textbook divider." The netlist is identical either way, so nothing will flag it.
+
+Check *every* pin of *every* symbol, including mid-chain nodes such as the bottom of a divider's upper resistor.
+
+### GND Approach
+
+The ground symbol is vertical, so **only a vertical wire may attach to `FLAG x y 0`**. A horizontal ground rail must T-junction onto that vertical stub **≥ 48 px above the flag**, never onto the flag itself, and that junction must also sit ≥ 48 px from any other pin on the same net.
+
+### Named Nets on the Stub
+
+Place `IN` / `OUT` labels on the pin-exit stub itself, in the pin direction. Do **not** add a sideways spur whose only purpose is to hold a label. If V1's `+` faces up, run the stub straight up ≥ 48 px and put the flag at the top of it.
+
+### Parallel RC Placement
+
+`res` pins are 80 px apart; `cap` pins are 64 px apart. That 16 px shortfall has to go somewhere.
+
+Placement by resistor orientation, using identical pin-line spacing (**96 px**) in all four cases:
+
+| Resistor rotation | Capacitor placement | Typical cap rotation |
+|-------------------|---------------------|----------------------|
+| R0 (vertical) | left of resistor | R0 |
+| R90 (horizontal) | below resistor | R270 (or R90) |
+| R180 (vertical, flipped) | right of resistor | R0 |
+| R270 (horizontal) | above resistor | R270 |
+
+Keep **both resistor exit stubs equal** at 48 px, then absorb the 16 px difference on the **capacitor** rail, after the capacitor's own exit stub. Do not shorten one resistor stub to make the ends meet — that produces a visibly lopsided pair. Verify afterwards that both parts land on the same two nets in the netlist.
+
+Use the **same center-to-center spacing in all four cases**. The natural mistake is to place horizontal pairs closer together than vertical ones, because a horizontal pair has more visual room; the result is a sheet whose parallel pairs are inconsistently spaced depending on rotation.
+
+**Self-test for this rule:** one R+C pair in each of R0, R90, R180, and R270 on a single sheet exercises every parallel-routing case at once. If all four netlist as two-element parallel branches on the same node pairs and all four look alike, the routing logic is correct; a bug in the 16 px absorption or in the stub direction shows up in exactly one quadrant.
+
+### SPICE Directive Placement
+
+1. **Below the circuit.** Put the directive block under all symbols, wires, and flags — typically below the ground bus — never beside or on top of the drawing.
+2. **No overlap with anything.** Directives must not cover ground flags, net labels, symbol bodies, instance names or values, or wires.
+3. **No overlap with each other.** Stack them in one column with ~32 px between `TEXT` baselines.
+4. **Grow the sheet** if the block would fall past the bottom edge.
+
+### Attribute Text Placement
+
+Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not by free `TEXT` elements.
+
+1. **Justification** — choose `Left`, `Right`, `VTop`, `VBottom`, etc. so the string grows *away* from the symbol body and away from nearby wires.
+2. **Clearance** — keep ≥ 16 px between the nearest edge of the text and the symbol outline, and from other objects.
+3. **Re-check after rotating** — evaluate attribute placement in the *final* orientation, not the one you placed it in.
+4. **Long values** — strings like `PULSE(...)` need real room; shift them clear of dense routing rather than overlapping the symbol to save space.
+5. **Fallback** — if no placement clears the circuitry on a crowded sheet, keep the original `WINDOW` and justification. Do not make the layout worse with speculative moves.
+
+### Post-Edit Layout Gate
+
+Run this after **every** change that creates a schematic or adds or moves symbols, wires, or flags — including first-time builds, full rebuilds, and late one-part additions. Run it *before* simulating and *before* reporting the schematic as finished, and re-run it after each fix.
+
+**A correct netlist does not close out the task.** Netlist OK ≠ layout OK.
+
+1. **Compute pins, not origins** — derive every pin's world coordinate from the pin table plus the orientation transform; wire endpoints must hit those coordinates.
+2. **Scan for diagonals** — read every `WIRE x1 y1 x2 y2` line and check whether it changes **both** X and Y. No wire may. Replace each diagonal with an orthogonal pair of segments through an explicit corner point. This is a purely mechanical text check and catches the most visually obvious defect in the file.
+3. **Pin exit stubs** — ≥ 48 px in the pin direction, on every pin, with no perpendicular bus landing on a pin.
+4. **Series gaps** — ≥ 48 px of clear wire between consecutive devices on a rail.
+5. **Adjacent spacing** — ≥ 96 px between the closest pins of side-by-side parts.
+6. **Ground** — only vertical wires touch `FLAG ... 0`; horizontal T-junctions are ≥ 48 px from the flag and from other pins.
+7. **Flags** — every flag lies on a wire, ≥ 48 px from the pin it serves, on the pin-direction stub.
+8. **Directives** — below the circuit, non-overlapping.
+9. **Attribute text** — clears symbols and wires where practical.
+10. **Netlist confirm** — intended connectivity, no accidental shorts, labels on the intended nodes, and every `NC_*` node accounted for as an intentionally open pin.
+11. **Re-gate after late edits** — if anything changed after step 10, return to step 1.
+
+### When the Gate Does Not Apply
+
+The gate covers **geometry changes**. Skip it for:
+
+- Read-only questions about a schematic, or describing a circuit that is already open
+- Inspecting a netlist or a simulation log
+- Running a simulation when no layout edit was made
+- Value-only edits — changing a `SYMATTR Value` or a `TEXT` directive's parameters, with no symbol, wire, `FLAG`, or `TEXT` position moved
+- Edits confined to a `.plt` plot-settings file
+
+**Do not skip it because the circuit is simple or the netlist looks right.** Neither is evidence about layout, and simple circuits are where the geometry pass is most often dropped.
+
+### Definition of Done
+
+A schematic edit is complete when **all three** hold:
+
+1. The gate above passes end to end
+2. The generated netlist is clean — correct connectivity, no unintended merges, and any `NC_*` nodes are pins you meant to leave open
+3. The simulation runs, unless the user declined to run it
+
+A clean netlist alone is not done, and a successful simulation alone is not done. Report the work as finished only against all three.
+
+**Failure modes worth naming**, since each has produced a broken drawing that netlisted cleanly:
+
+- Optimizing topology and values, then skipping the geometry pass entirely
+- Rebuilding a circuit without re-checking stubs and gaps that the old layout satisfied
+- Wrong rotation or mirror pin math, then "connecting somehow" with extra wire instead of moving the symbol
+- Dropping a late component beside an existing one without re-measuring the 96 px spacing
+- Placing a flag on a pin, off-wire, or mid-body instead of on a stub
+- Adding a sideways spur purely to hold a net label
+- Fixing only what surfaces as `NC_*` in the netlist, leaving stub violations invisible and uncorrected
+- Drawing a wire that spans both pins of a two-terminal part, shorting it out
+- Emitting a diagonal wire because both endpoints were correct pin coordinates and no intermediate corner was computed
+
+### Auditing an Existing Schematic
+
+The gate is written for a schematic you just produced. Auditing one you did not — a file edited by hand in the GUI, or generated earlier — is a different task: you are looking for symptoms rather than verifying your own arithmetic. Read the `.asc` and check for each of these.
+
+| Symptom | What to look for in the file |
+|---------|------------------------------|
+| Overlapping symbols | Two `SYMBOL` origins close enough that the bodies intersect, given each part's span |
+| Unintentionally open pins | `NC_*` nodes in the netlist — see the caveat below before treating any of them as a fault |
+| Placeholder values | `SYMATTR Value` left as a bare `R`, `C`, `L`, or `V` — the symbol default was never filled in |
+| Diagonal wires | Any `WIRE` line changing both X and Y |
+| Flags on pins | A `FLAG` whose coordinate equals a pin world coordinate instead of sitting on a stub |
+| Stray flags | A `FLAG` at `(0,0)` or otherwise not on any wire — usually a mis-click left behind |
+| Overlapping directives | Two `TEXT` elements with the same or near-identical baseline, or a `TEXT` sitting over the drawing |
+| Attribute text on the body | `WINDOW` offsets that place `InstName` or `Value` inside the symbol outline |
+| Routing shorts | One long wire run collecting more pins than intended — a vertical segment past a transistor picking up both collector and emitter, for instance |
+
+**`NC_*` is not by itself an error.** LTspice invents a node name like `NC_01` for every pin with nothing attached, and plenty of pins are allowed to be left open, for example the SYNC, MODE, or PG/PGOOD pins of some power supply products. Circuits may also deliberately include unconnected pins, for example to perform an open-circuit voltage measurement or disconnect an output load.
+
+So treat each `NC_*` as a **question**: is this pin open on purpose? Only an open pin that the topology needs connected is a defect. What makes a real one easy to spot is that it is usually accompanied by a *nearby* wire endpoint — a wire drawn to the symbol origin instead of the pin, or to a stale pin coordinate from before a rotation — rather than by no wire at all. LTspice's **Mark unconnected pins** drafting option exists to make open pins visible for review, not to flag them as wrong.
+
+**Separate nodes that must differ.** The routing-short case is worst on high-impedance nets, where a stray connection changes the DC operating point without producing any obviously wrong-looking geometry. When two nets are meant to stay distinct — a transistor base and its collector, an op-amp input and its output — confirm in the netlist that they are two different node names, rather than trusting that the drawing separates them.
+
+Late edits are the common origin of all of these: a part moved without re-measuring, or a wire extended to reach a new component and passing through an existing pin on the way.
+
+---
+
 ## Wires
 
 Wires represent electrical connections between two points.
@@ -3301,7 +3839,7 @@ WIRE x1 y1 x2 y2
 
 ### Rules
 
-- Wires should be orthogonal (horizontal or vertical) for best results.
+- **Wires must be orthogonal** — each `WIRE` changes X or Y, never both. A diagonal is electrically valid and LTspice will draw it, but it is the loudest visual signal that a schematic was generated rather than drawn. Route through an explicit corner point instead: two segments, `WIRE x1 y1 x2 y1` then `WIRE x2 y1 x2 y2`.
 - Wires connect at their endpoints.
 - When three or more wires meet at a single point, LTspice automatically creates a junction dot.
 - Wire endpoints must exactly coincide with component pin locations to form connections.
@@ -3407,6 +3945,27 @@ Common attribute IDs:
 
 Justification values: `Left`, `Right`, `Top`, `Bottom`, `Center`, `VLeft`, `VRight`, `VTop`, `VBottom`, `VCenter`
 
+### Value Notation
+
+**Write `u` for micro, never `µ`.** This is an authoring rule for every value you emit, not merely a workaround for UTF-8-only tooling. LTspice reads `u` and `µ` identically, but `µ` is byte `0xB5` in the Windows-1252 file and is the single most common way an `.asc` gets corrupted in an edit round-trip — see [File Encoding](#file-encoding--critical). Existing `µ` characters in a file you are editing may stay as they are; anything you write should use `u`. The same reasoning applies to `Ω`: write `1k`, not `1kΩ`.
+
+**Omit the unit suffix.** Write `1u`, not `1uF`; `10k`, not `10kΩ`; `4.7m`, not `4.7mH`. LTspice tolerates a trailing unit letter on many values, but it is redundant — the element type already determines the unit — and it becomes actively wrong when the suffix letter collides with a multiplier. `1F` reads as 1 femto, not 1 farad.
+
+**Engineering multipliers**, case-insensitive:
+
+| Suffix | Multiplier | Suffix | Multiplier |
+|--------|-----------|--------|-----------|
+| `T` | 1e12 | `m` | 1e-3 |
+| `G` | 1e9 | `u` | 1e-6 |
+| `Meg` | 1e6 | `n` | 1e-9 |
+| `K` | 1e3 | `p` | 1e-12 |
+| | | `f` | 1e-15 |
+| | | `a` | 1e-18 |
+
+**`M` is milli, not mega.** Suffixes are case-insensitive, so `1M` and `1m` both mean 1e-3, and mega must be spelled `Meg`. Writing `1M` for a 1 MΩ resistor produces a 1 mΩ resistor — a factor of 10⁹ — and the simulation runs without complaint. Likewise `1Meg` for a capacitor value, not `1MEG` or `1e6` if you want the schematic to read conventionally (all three parse).
+
+Plain scientific notation (`1e6`, `4.7e-9`) is always accepted and is unambiguous where a multiplier would be confusing.
+
 ---
 
 ## Text and SPICE Directives
@@ -3466,18 +4025,24 @@ ARC Normal x1 y1 x2 y2 x3 y3 x4 y4
 
 ## Rotation and Mirroring
 
-Components support 8 orientations:
+Components support 8 orientations. The `M` forms are **rotate first, then mirror horizontally** — the operations do not commute, so the order is part of the definition:
 
-| String | Meaning                                        |
-|--------|------------------------------------------------|
-| `R0`   | No rotation (default)                          |
-| `R90`  | 90 degrees clockwise                           |
-| `R180` | 180 degrees rotation                           |
-| `R270` | 270 degrees clockwise (90 degrees CCW)         |
-| `M0`   | Mirror horizontally                            |
-| `M90`  | Mirror + 90 degrees rotation                   |
-| `M180` | Mirror vertically                              |
-| `M270` | Mirror + 270 degrees rotation                  |
+| String | Meaning                                                              |
+|--------|----------------------------------------------------------------------|
+| `R0`   | No rotation (default)                                                |
+| `R90`  | 90 degrees clockwise                                                 |
+| `R180` | 180 degrees rotation                                                 |
+| `R270` | 270 degrees clockwise (90 degrees CCW)                               |
+| `M0`   | Mirror horizontally                                                  |
+| `M90`  | Rotate 90 degrees clockwise, **then** mirror horizontally             |
+| `M180` | Rotate 180 degrees, then mirror horizontally — a net vertical flip   |
+| `M270` | Rotate 270 degrees clockwise, **then** mirror horizontally            |
+
+`M90` and `M270` are the two that punish getting the order backwards: mirroring first and *then* rotating 90 degrees produces `M270`'s geometry, and mirroring first then rotating 270 produces `M90`'s. The two orders coincide only for `M0` and `M180`.
+
+To convert an orientation into pin coordinates, use the eight-row transform table in [Pin World-Coordinate Calculation](#pin-world-coordinate-calculation).
+
+Mirroring changes which side each pin exits from, which in turn changes which direction its [pin exit stub](#pin-exit-stub) must run. Re-derive the stub directions after any orientation change.
 
 ---
 
@@ -3514,6 +4079,40 @@ Place these as `TEXT` elements with the `!` prefix. Only one analysis command (`
 | `.noise`   | Noise analysis           | `!.noise V(out) V1 dec 100 1 1Meg`  |
 | `.four`    | Fourier analysis         | `!.four 1k V(out)`                   |
 
+### Every Schematic Needs an Analysis Directive
+
+A schematic with no analysis directive will not simulate. If none is present and the intent is unclear, add `.op` (DC operating point) as the safe default before running.
+
+Exactly one analysis directive should be active at a time. Comment the others out with a leading `;` rather than deleting them.
+
+### AC Analysis Needs an AC Source Amplitude
+
+`.ac` performs a small-signal analysis around the DC operating point, and it excites only sources that declare an AC amplitude. At least one source must carry `AC <amplitude>` in its value:
+
+```
+SYMATTR Value AC 1
+```
+
+`AC 1` is the conventional amplitude choice, because every node voltage then reads directly as the transfer function to that input.
+
+### Measurement Syntax Gotchas
+
+`.meas` is evaluated in post-processing, so its syntax is checked only at the end of a run. The AC magnitude form trips people up constantly:
+
+```spice
+.meas AC fc WHEN db(V(Vout))=-3
+```
+
+| Wrong | Why |
+|-------|-----|
+| `.meas AC fc WHEN VdB(Vout)=-3` | `VdB()` is not a function |
+| `.meas AC fc WHEN db(Vout)=-3` | missing the `V()` wrapper |
+| `.meas AC fc WHEN V(Vout)dB=-3` | not valid syntax |
+
+AC analysis returns complex values; `db()` takes the magnitude and converts it to decibels, so the voltage must be wrapped in `V()` *inside* `db()`.
+
+Prefer `.meas` output in the log over reading raw waveform data when all you need is a scalar.
+
 ---
 
 ## Design Best Practices
@@ -3524,7 +4123,7 @@ Place these as `TEXT` elements with the `!` prefix. Only one analysis command (`
 
 3. **Align to grid**: Place all components and wire endpoints on the 16-unit grid to ensure proper connectivity.
 
-4. **Use orthogonal wires**: Keep wires horizontal or vertical for clean, readable schematics.
+4. **Use orthogonal wires**: Every `WIRE` changes X or Y, never both. Scanning the file for lines where `x1 != x2 && y1 != y2` catches this mechanically.
 
 5. **One analysis command per simulation**: While multiple can exist, only the active (uncommented) analysis runs.
 
@@ -3533,6 +4132,16 @@ Place these as `TEXT` elements with the `!` prefix. Only one analysis command (`
 7. **Verify connectivity**: Ensure wire endpoints touch component pins exactly. Misaligned connections are a common source of errors.
 
 8. **Use hierarchical design for complex circuits**: Break large designs into subcircuit blocks with I/O pins.
+
+9. **Never span a two-terminal part with a single wire**: A segment running from one pin to the other shorts the component while looking entirely normal on screen.
+
+10. **Check the generated netlist, not just the drawing**: Look for two nets that unexpectedly merged, and for `NC_*` nodes on pins that were supposed to be connected. Not every `NC_*` is a fault — substrate and bulk pins, unused subcircuit pins, and deliberately open nodes all produce one.
+
+11. **Apply the [Layout Quality Rules](#layout-quality-rules)**: Connectivity is the floor, not the finish line. Run the [post-edit layout gate](#post-edit-layout-gate) after any geometry change.
+
+12. **Write values in ASCII with no unit suffix**: `1u`, `10k`, `4.7n` — and `Meg`, never `M`, for mega. See [Value Notation](#value-notation).
+
+13. **Draw the signal left to right**: Source at the left, output at the right, ground on a bus underneath. See [Composition Conventions](#composition-conventions).
 ---
 
 ## Example Walkthrough
@@ -3570,14 +4179,33 @@ TEXT 64 312 Left 2 !.tran 10m
 
 ## Creating a New Schematic - Checklist
 
+**Connectivity**
+
 - [ ] Start with `Version 4.1` and `SHEET 1 width height`
 - [ ] Place wires to connect component pins (endpoints must align exactly)
 - [ ] Add at least one ground flag (`FLAG x y 0`)
 - [ ] Place all required symbols with proper rotation
 - [ ] Set `SYMATTR InstName` for every component
-- [ ] Set `SYMATTR Value` for components that need values
+- [ ] Set `SYMATTR Value` for components that need values, using `u` not `µ` and no unit suffix
 - [ ] Add at least one analysis command as a `TEXT` element with `!` prefix
+- [ ] For `.ac`, at least one source carries an `AC <amplitude>` term
 - [ ] Verify all wire endpoints connect to pins (misalignment = open circuit)
+- [ ] Confirm no wire spans both pins of a two-terminal part (silent short)
+
+**Layout** — see [Layout Quality Rules](#layout-quality-rules)
+
+- [ ] No `WIRE` line changes both X and Y (no diagonals)
+- [ ] Every pin has a ≥ 48 px exit stub in the pin's own direction
+- [ ] No perpendicular bus or net label lands directly on a pin
+- [ ] Adjacent pin columns/rows are ≥ 96 px apart
+- [ ] Only a vertical wire touches each `FLAG ... 0`
+- [ ] Every `FLAG` sits on a wire ≥ 48 px from its pin
+- [ ] Signal flows left to right; grounds collect on a bus below the circuit
+- [ ] The SPICE `TEXT` block is below the circuit, non-overlapping, and inside the sheet
+- [ ] Generated netlist shows no accidental shorts, and every `NC_*` node is a pin left open on purpose
+- [ ] **Re-run this list after any late addition** — adding one part invalidates it
+
+Then apply the [definition of done](#definition-of-done): checklist, clean netlist, and a completed simulation.
 
 ---
 
@@ -3600,6 +4228,8 @@ TEXT 64 312 Left 2 !.tran 10m
 - After moving or rotating components, wire endpoints must be updated to match the new pin locations.
 - LTspice recalculates connectivity each time a schematic is opened or simulated.
 - Keep a backup before making bulk text-editor changes.
+- Before editing an unfamiliar schematic, walk [Auditing an Existing Schematic](#auditing-an-existing-schematic) — inherited defects are easy to mistake for your own after a change, and easy to blame on your change when they predate it.
+- Any edit in the "Move", "Add", "Delete", or "Rotate" rows above is a geometry change and requires the [post-edit layout gate](#post-edit-layout-gate). Value and analysis edits do not.
 
 ---
 
@@ -4075,6 +4705,32 @@ Each pane has independent autoscaling.
 - Mouse position always displayed on status bar
 - Drag-zoom box size shown (quick measurement)
 - Time differences converted to frequency
+
+---
+
+## Executing .MEAS Scripts
+
+`.MEAS` statements are evaluated in post processing on the saved waveform dataset, so
+they can be run against data already on disk — **no re-simulation required**.
+
+**Menu**: With the waveform window active, **File > Execute .MEAS Script**
+
+This runs a script of `.MEAS` statements against the displayed dataset and writes the
+results to the log (**View > SPICE Output Log**, Ctrl+L). Use it to add or revise
+measurements after a long run, or to iterate on measurement expressions against a fixed
+dataset.
+
+**Script file**: can be a plain netlist — LTspice reads only the `.MEAS` statements and
+ignores every other line, so the circuit's own `.net` or `.cir` file works as-is.
+
+**Accuracy**: results are limited by the accuracy of the waveform data *after*
+compression. Disable compression for precise measurements:
+
+```spice
+.options plotwinsize=0   ; disable compression
+```
+
+*See [MEAS-REFERENCE.md](MEAS-REFERENCE.md) for `.MEAS` syntax and examples.*
 
 ---
 
@@ -4642,7 +5298,7 @@ conn.close()
 
 ---
 
-*See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE syntax and examples*
+*See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE syntax and examples, [MEAS-REFERENCE.md](MEAS-REFERENCE.md) for worked .MEAS examples including `.STEP`'ed measurement output*
 ---
 
 *Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
@@ -4657,6 +5313,35 @@ conn.close()
 This document contains `.MEAS` statement examples for various simulation types.
 
 `.MEAS` results appear in the SPICE Output Log (View → SPICE Output Log, or CTRL+L)
+
+## How .MEAS Statements Are Executed
+
+`.MEAS` statements are evaluated in **post processing**, after the simulation has
+completed — they operate on the saved waveform dataset, not on the running simulation.
+
+### Running a .MEAS Script Without Re-Simulating
+
+Because measurements are pure post processing, you can write `.MEAS`
+statements and execute them against an existing dataset:
+
+1. Make the **waveform window** the active window
+2. Execute menu command **File > Execute .MEAS Script**
+
+This re-measures the waveform data already on disk, so there is no need to re-run the
+simulation to add or change a measurement. Useful for long transient runs, and for
+iterating on measurement expressions against a fixed dataset.
+
+**The script can be an ordinary netlist.** LTspice ignores everything in the file except
+the `.MEAS` statements — component lines, other dot commands, and the title line are all
+skipped. So you can point **Execute .MEAS Script** straight at the circuit's own `.net`
+or `.cir` file: edit or add `.MEAS` lines there, execute the script, and read the new
+results without touching the simulation.
+
+The usual alternative is to place `.MEAS` statements on the schematic as a SPICE
+directive (or in the netlist alongside the other simulation commands), in which case
+they run automatically at the end of each simulation.
+
+
 
 ## .MEAS with AC Analysis - Key Functions
 
@@ -5389,6 +6074,9 @@ low_freq_noise_density: V(onoise) =1.47854748889e-07 at 1
 
 ---
 
+*See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for `.MEASURE` syntax and the full range of measurement keywords, [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md) for querying `.STEP`'ed results from the SQLite `.db` file*
+---
+
 *Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*
 
 
@@ -5565,19 +6253,22 @@ Uses Middlebrook's method (voltage injection) to measure the loop transfer funct
 Run a standard `.tran` simulation to confirm the SMPS starts up and reaches steady state.
 
 #### Step 2: Insert FRA Component
-Break the feedback loop and insert the FRA device (prefix `@`) at the injection point.
+Break the feedback loop and insert the FRA device (prefix `@`) at the injection point. Valid placement must satisfy two criteria:
+
+1. **The device must completely interrupt the feedback.** Every feedback path has to pass through it. If any path bypasses the device — a feedforward capacitor around the divider, a second sense connection, an auxiliary loop — part of the loop stays closed and what you measure is not the loop gain.
+2. **The device must point from lower impedance to higher impedance.** Connect the **OUT** terminal to the low-impedance side of the break and the **IN** terminal to the high-impedance side — typically OUT toward the converter output and IN toward the feedback divider or error-amplifier input. If the source impedance at the break is not small compared with the load impedance, the injection loads the loop and the measured response is corrupted.
 
 #### Step 3: Initial Exploratory FRA
-Start with 2-3 frequencies to verify the setup works:
+Start with 2-3 frequencies to verify the setup works — use `flist` on the FRA device to apply just those frequencies individually:
 ```spice
 .fra
 ```
 
-Key FRA device parameters:
-- **Fstart**: Starting frequency (typically 100Hz-1kHz for SMPS)
-- **Fend**: Ending frequency (typically 100kHz-1MHz)
-- **Settling cycles**: Time to allow circuit to settle at each frequency
-- **Averaging cycles**: Cycles to average for measurement
+Key FRA device parameters (see [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer) for the full list):
+- **fstart**: Starting frequency (typically 100Hz-1kHz for SMPS)
+- **fend**: Ending frequency (typically 100kHz-1MHz)
+- **tsettle**: Settling time at each frequency before analysis begins. Start at `2/fcross`, where fcross is the expected 0dB crossover. Defaults to `10/fend`.
+- **tavgmin**: Minimum analysis time per frequency. For an SMPS, start at `100/fsw`, where fsw is the switching frequency.
 
 #### Step 4: Check for Nonlinearity
 Inspect FRA transient waveforms — stimulus should be small enough to not disturb the operating point significantly.
@@ -5586,13 +6277,20 @@ Inspect FRA transient waveforms — stimulus should be small enough to not distu
 Analyze the gain/phase plot. Identify the 0dB crossover frequency (f0dB).
 
 #### Step 6: Adjust Stimulus Amplitude
-Use frequency-dependent amplitude parameters to keep injection small at low frequencies (where loop gain is high) and larger at high frequencies (where gain is low).
+Use the frequency-dependent amplitude parameters (`pp0`, `pp1`, `f0`, `f1` — the recommended method) to inject a larger stimulus at low frequencies and a smaller one at high frequencies. Where loop gain is high, the loop suppresses the injected perturbation, so a larger stimulus is needed to get a measurable response; near and above crossover the loop no longer attenuates it, so the same amplitude would disturb the operating point and distort the result.
+
+```spice
+* 2mV up to 1kHz, tapering to 1mV above 2kHz
+@1 A B fstart=1k fend=500k pp0=2m pp1=1m f0=1k f1=2k
+```
 
 #### Step 7: Add More Frequencies
-Use 2-3 points per octave for a smooth Bode plot.
+Use 2-3 points per octave (`oct=2` or `oct=3`) for a smooth Bode plot.
 
 #### Step 8: Speed Up (Optional)
-Reduce settling/averaging cycles where the circuit responds quickly.
+Reduce `tsettle` and `tavgmin` where the circuit responds quickly, and use `fcoarse` (set to 2-10× `fstart`) to coarsen the sweep at low frequencies, where each point is most expensive.
+
+Only at this point — with the setup already validated by the steps above — consider raising `nmax` above its default of 1 to inject harmonics alongside the fundamental. It trades accuracy for speed, because the circuit's own harmonic distortion then falls on the measured frequencies and cannot be separated from the real response. See [`nmax`](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer) before using it.
 
 ### Reference
 

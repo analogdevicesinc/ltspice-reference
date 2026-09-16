@@ -218,7 +218,7 @@ DC small-signal transfer function analysis.
 
 ### .FRA — Frequency Response Analysis
 
-Time-domain frequency response analysis for feedback loops (e.g., SMPS stability). Requires FRA device instance (prefix `@`).
+Time-domain frequency response analysis for feedback loops (e.g., SMPS stability). Requires an FRA device instance (prefix `@`) — the sweep range, stimulus amplitude and timing are all set on that device, not on this command. See [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer) for its parameters. Optional [FRA probe devices](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analysis-probe) (prefix `&`) add differential measurement points to the same run, and a circuit with multiple independent loops can use one FRA device per loop.
 
 ```spice
 .fra [Tstart=<val>] [dTmax=<val>] [Tstep=<val>] [Tstop=<val>]
@@ -226,6 +226,33 @@ Time-domain frequency response analysis for feedback loops (e.g., SMPS stability
 ```
 
 All parameters optional, specified by keyword. FRA automatically stops when all FRA devices complete analysis.
+
+**Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)** rather than configuring the analysis from scratch. A valid measurement depends on device settings that have to be established in order — a `delay` long enough to reach steady state, a stimulus amplitude that does not disturb the operating point, and adequate settling and averaging time at each frequency. Misset, they yield a plausible-looking Bode plot that is simply wrong.
+
+**Measurements on FRA data**: an `.fra` run *is* a transient run — its `.raw` file reports
+`Transient Analysis` with `time` as the x-axis — so `.meas TRAN` statements placed in the
+circuit work directly, alongside the frequency-response results. No separate `.tran`
+simulation is needed to get ripple, overshoot, or average figures out of the same run.
+
+Window the measurement, though. With no range given it spans the whole FRA sweep, which is
+dominated by the stimulus the FRA device injects; use `FROM`/`TO` (or `TRIG`/`TARG`) to
+restrict it. The interval before the device's `delay` is still unperturbed.
+
+```spice
+.meas TRAN vout_pp   PP V(out)                 ; whole sweep — includes FRA stimulus
+.meas TRAN quiescent PP V(out) FROM 0 TO 100u  ; before delay=100u — stimulus not yet applied
+```
+
+**`.meas AC` does not work on FRA results.** Every `.meas` statement in an FRA circuit is
+evaluated against the transient data, so a `.meas AC` directive on an FRA schematic is
+**silently discarded** — it produces no result, no warning, and no mention of the
+measurement name anywhere in the log. There is no way to measure the frequency-domain
+(Bode) data from a directive in the circuit.
+
+To measure the Bode data, run the measurements against the FRA plot from the waveform
+window instead: make the FRA plot the active window and use **File > Execute .MEAS
+Script** (see [.MEASURE](#measure--user-defined-measurements)). That is the only route to
+`.meas` results on the frequency response LTspice extracts from the time-domain run.
 
 See: File > Open Examples > Educational\FRA\
 
@@ -299,6 +326,8 @@ Post-processing command to extract measurements from simulation results.
 .meas NOISE total_noise INTEG V(onoise)
 ```
 
+**Worked examples**: [MEAS-REFERENCE.md](MEAS-REFERENCE.md) has complete netlists paired with the log output they produce, covering AC and noise measurements in depth.
+
 **Output**: Results in .log file. With `.step`, results form tables. Data saved to SQLite `.db` file (see [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md)).
 
 **Note**: The output of one `.meas` statement can be used in other `.meas` statements (e.g., `PARAM Trise*2` references the `Trise` measurement).
@@ -309,6 +338,19 @@ Post-processing command to extract measurements from simulation results.
 3. Execute **Plot .step'ed .meas data** from the context menu
 
 This plots the `.MEAS` results as waveforms indexed by step parameter value.
+
+**Running .MEAS on an existing dataset (no re-simulation)**: `.meas` statements are
+evaluated entirely in post processing, so a script of them can be executed against
+waveform data already on disk. Make the **waveform window** the active window, then use
+**File > Execute .MEAS Script**. This avoids re-running the simulation just to add or
+change a measurement. The script file may be an ordinary netlist — everything except the
+`.meas` statements is ignored, so the circuit's own `.net`/`.cir` file can be used
+directly.
+
+**Accuracy caveat**: because `.meas` reads the saved waveform data, its accuracy is
+limited by that data *after* compression. Disable or loosen compression
+(`.options plotwinsize=0`) for more precise `.meas` output — see
+[Waveform Compression](#waveform-compression).
 
 ---
 

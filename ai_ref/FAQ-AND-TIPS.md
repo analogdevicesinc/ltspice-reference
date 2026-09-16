@@ -187,19 +187,22 @@ Uses Middlebrook's method (voltage injection) to measure the loop transfer funct
 Run a standard `.tran` simulation to confirm the SMPS starts up and reaches steady state.
 
 #### Step 2: Insert FRA Component
-Break the feedback loop and insert the FRA device (prefix `@`) at the injection point.
+Break the feedback loop and insert the FRA device (prefix `@`) at the injection point. Valid placement must satisfy two criteria:
+
+1. **The device must completely interrupt the feedback.** Every feedback path has to pass through it. If any path bypasses the device — a feedforward capacitor around the divider, a second sense connection, an auxiliary loop — part of the loop stays closed and what you measure is not the loop gain.
+2. **The device must point from lower impedance to higher impedance.** Connect the **OUT** terminal to the low-impedance side of the break and the **IN** terminal to the high-impedance side — typically OUT toward the converter output and IN toward the feedback divider or error-amplifier input. If the source impedance at the break is not small compared with the load impedance, the injection loads the loop and the measured response is corrupted.
 
 #### Step 3: Initial Exploratory FRA
-Start with 2-3 frequencies to verify the setup works:
+Start with 2-3 frequencies to verify the setup works — use `flist` on the FRA device to apply just those frequencies individually:
 ```spice
 .fra
 ```
 
-Key FRA device parameters:
-- **Fstart**: Starting frequency (typically 100Hz-1kHz for SMPS)
-- **Fend**: Ending frequency (typically 100kHz-1MHz)
-- **Settling cycles**: Time to allow circuit to settle at each frequency
-- **Averaging cycles**: Cycles to average for measurement
+Key FRA device parameters (see [CIRCUIT-ELEMENTS-REFERENCE.md](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer) for the full list):
+- **fstart**: Starting frequency (typically 100Hz-1kHz for SMPS)
+- **fend**: Ending frequency (typically 100kHz-1MHz)
+- **tsettle**: Settling time at each frequency before analysis begins. Start at `2/fcross`, where fcross is the expected 0dB crossover. Defaults to `10/fend`.
+- **tavgmin**: Minimum analysis time per frequency. For an SMPS, start at `100/fsw`, where fsw is the switching frequency.
 
 #### Step 4: Check for Nonlinearity
 Inspect FRA transient waveforms — stimulus should be small enough to not disturb the operating point significantly.
@@ -208,13 +211,20 @@ Inspect FRA transient waveforms — stimulus should be small enough to not distu
 Analyze the gain/phase plot. Identify the 0dB crossover frequency (f0dB).
 
 #### Step 6: Adjust Stimulus Amplitude
-Use frequency-dependent amplitude parameters to keep injection small at low frequencies (where loop gain is high) and larger at high frequencies (where gain is low).
+Use the frequency-dependent amplitude parameters (`pp0`, `pp1`, `f0`, `f1` — the recommended method) to inject a larger stimulus at low frequencies and a smaller one at high frequencies. Where loop gain is high, the loop suppresses the injected perturbation, so a larger stimulus is needed to get a measurable response; near and above crossover the loop no longer attenuates it, so the same amplitude would disturb the operating point and distort the result.
+
+```spice
+* 2mV up to 1kHz, tapering to 1mV above 2kHz
+@1 A B fstart=1k fend=500k pp0=2m pp1=1m f0=1k f1=2k
+```
 
 #### Step 7: Add More Frequencies
-Use 2-3 points per octave for a smooth Bode plot.
+Use 2-3 points per octave (`oct=2` or `oct=3`) for a smooth Bode plot.
 
 #### Step 8: Speed Up (Optional)
-Reduce settling/averaging cycles where the circuit responds quickly.
+Reduce `tsettle` and `tavgmin` where the circuit responds quickly, and use `fcoarse` (set to 2-10× `fstart`) to coarsen the sweep at low frequencies, where each point is most expensive.
+
+Only at this point — with the setup already validated by the steps above — consider raising `nmax` above its default of 1 to inject harmonics alongside the fundamental. It trades accuracy for speed, because the circuit's own harmonic distortion then falls on the measured frequencies and cannot be separated from the real response. See [`nmax`](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer) before using it.
 
 ### Reference
 

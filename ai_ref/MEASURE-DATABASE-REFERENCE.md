@@ -201,7 +201,7 @@ conn.close()
 
 ---
 
-*See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE syntax and examples*
+*See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for .MEASURE syntax and examples, [MEAS-REFERENCE.md](MEAS-REFERENCE.md) for worked .MEAS examples including `.STEP`'ed measurement output*
 ---
 
 *Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

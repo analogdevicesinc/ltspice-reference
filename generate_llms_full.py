@@ -101,7 +101,9 @@ def main() -> None:
         parts.append(body + "\n")
 
     out = root / "llms-full.txt"
-    out.write_text("".join(parts), encoding="utf-8")
+    # newline="\n" keeps the bundle LF-only on every platform; without it Windows
+    # translates every \n to \r\n and rewrites the whole file.
+    out.write_text("".join(parts), encoding="utf-8", newline="\n")
     print(f"Wrote {out} ({out.stat().st_size} bytes) from {len(FILES)} files.")
 
 

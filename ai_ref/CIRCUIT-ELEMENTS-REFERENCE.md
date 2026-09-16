@@ -38,6 +38,8 @@ Complete reference for all circuit element types in LTspice, including syntax, p
 22. [B — Behavioral Source](#b--behavioral-source)
 23. [A — Special Functions](#a--special-functions)
 24. [X — Subcircuit](#x--subcircuit)
+25. [@ — Frequency Response Analyzer](#--frequency-response-analyzer)
+26. [& — Frequency Response Analysis Probe](#--frequency-response-analysis-probe)
 
 ---
 
@@ -866,6 +868,146 @@ In the example above, the mapping is:
 | `IN` | EN/UV |
 
 Because `;§pnba` is introduced by `;`, it is an ordinary comment and is ignored by the simulator — it exists purely to preserve the symbol pin names alongside the net assignments.
+
+---
+
+## @ — Frequency Response Analyzer
+
+**Symbols**: FRA
+
+```spice
+@xxx in out [zm] fstart=<val> fend=<val> [delay=<val>] [oct=<val>] [fcoarse=<val>]
++ [nmax=<val>] [[pp0=<val>] [[pp1=<val>] [f0=<val> f1=<val>]]] [tavgmin=<val>]
++ [tsettle=<val>] [rpar=<val>] [flist=<values>] [acmag=<val>] [acphase=<val>]
++ [refnode=<netname>] [intnode=<netname>]
+```
+
+During a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the analyzer applies a range of sinusoidal stimuli and measures the circuit response. Used to analyze loop gain versus frequency or impedance versus frequency. For a step-by-step procedure using this device, see [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra).
+
+**Analysis mode**:
+
+- Default — **gain analysis**: applies voltage stimuli and analyzes the absolute voltage at each terminal.
+- With the `zm` keyword — **impedance analysis**: applies current stimuli and analyzes the voltage *across* the terminals.
+
+**Example**:
+```spice
+@1 A B delay=1m fstart=1k fend=500k oct=1 fcoarse=10k nmax=1 pp0=2m pp1=1m f0=1k f1=2k tavgmin=100u tsettle=200u
+```
+
+### Analysis Frequencies
+
+Frequency is stepped from `fstart` to `fend` at a resolution set by `oct`, the number of points per octave — `oct=1` doubles the stimulus frequency at every step.
+
+`fcoarse` forces coarse stepping (*maximum* one point per octave, `oct<=1`) below the given frequency; the `oct` setting then applies only above it. Setting `fcoarse` to 2–10× `fstart` can greatly reduce simulation time.
+
+`flist` applies a list of specific frequencies individually instead of sweeping.
+
+### Stimulus Amplitude
+
+Amplitude may be specified by one of three methods:
+
+| Method | Behavior |
+|--------|----------|
+| `pp0` alone | Sets one stimulus amplitude across all frequencies. |
+| `pp0`, `pp1`, `f0`, `f1` | Amplitude is `pp0` up to `f0`, `pp1` above `f1`, and logarithmically interpolated between `(f0, pp0)` and `(f1, pp1)`. **Recommended for most circuits.** |
+| `pp` | Piecewise logarithmic amplitude vs. frequency, as space-delimited frequency-voltage pairs. `pp=1k 10m 10k 1m` is equivalent to `f0=1k pp0=10m f1=10k pp1=1m`. |
+
+Typically `pp0 > pp1` — a larger stimulus at low frequencies, where high loop gain suppresses the injected perturbation, and a smaller one at high frequencies, where the loop no longer attenuates it and too much drive would disturb the operating point.
+
+### Simultaneous Harmonic Injection
+
+To reduce simulation time, the FRA device may inject a sinusoid and several of its harmonics simultaneously. `nmax` sets the maximum number of overlaid simultaneous sinusoids per stimulus, given either as an integer or as piecewise-logarithmic frequency-value pairs.
+
+**`nmax` defaults to 1 (no harmonic injection), and generally should be left there.** Injecting harmonics alongside the fundamental means any harmonic distortion the circuit itself produces lands on exactly the frequencies being measured, where it cannot be distinguished from the real response. Raise `nmax` above 1 only when you are specifically trying to speed up a simulation whose setup is already known to be good — never while still validating a measurement.
+
+When you do raise it:
+
+- Higher `nmax` reduces simulation time but may reduce accuracy; `nmax=2` is a reasonable first step, and beyond `nmax=4` there is generally little further benefit.
+- LTspice automatically scales the total amplitude to the specified `pp*` value.
+- Compare the result against an `nmax=1` run to confirm the speed-up has not changed the answer.
+
+### Timing
+
+- **`tavgmin`** — minimum time each sinusoid is analyzed. For each applied frequency, if `1/f < tavgmin`, the analysis time is increased in integer period increments until it exceeds `tavgmin`. For an SMPS, a good starting point is `100/fsw`, where `fsw` is the switching frequency.
+- **`tsettle`** — time between a stimulus first being applied and analysis beginning. A good starting point is `2/fcross`, where `fcross` is the approximate expected 0 dB crossover frequency. Defaults to `10/fend`.
+- **`delay`** — time at which the analyzer applies its first stimulus. Set it long enough for the circuit to reach steady state before stimulus begins: measuring during start-up or while the output is still settling perturbs an operating point that is itself still moving, giving a meaningless loop gain. Determine the settling time from the plain `.tran` run of Step 1 in the [SMPS Bode plot procedure](FAQ-AND-TIPS.md#smps-bode-plots-fra) and set `delay` beyond it.
+
+### Alternate Measurement Nodes
+
+- **`refnode`** — measures the `in` and `out` node voltages relative to `refnode` instead of ground. This allows FRA to be used on, for example, circuits that regulate current via the voltage across a sense resistor. Not applicable to impedance analysis.
+
+  **The [`&` probe device](#--frequency-response-analysis-probe) is generally preferred over `refnode`.** Both address the same differential-feedback cases, but the probe takes an explicit differential pair at each end (`o+`/`o-` and `i+`/`i-`) instead of redefining the reference for the analyzer's own terminals, and it adds measurement points without altering how the loop is broken.
+- **`intnode`** — specifies an intermediate node for an additional gain analysis, useful for analyzing the external compensation point of a regulator. Gain is calculated from the FRA device to `intnode`, and the complex value is included in the raw output file so it can be plotted in the waveform viewer. To measure gain between arbitrary *differential* point pairs rather than to a single node, use the [`&` probe device](#--frequency-response-analysis-probe).
+
+### Results and Bode Plot
+
+When simulated in the GUI, LTspice opens a Bode plot and may populate it automatically — but only in two configurations, which depend both on the FRA device's terminals and on how many [`&` probes](#--frequency-response-analysis-probe) are in the circuit:
+
+| FRA device terminals | `&` probes in circuit | Auto-plotted trace |
+|----------------------|-----------------------|--------------------|
+| Neither grounded | none | one trace per `@` FRA device |
+| One grounded | exactly one | that probe's trace |
+| Neither grounded | one or more | none — blank Bode plot |
+| One grounded | none, or more than one | none — blank Bode plot |
+
+A blank Bode plot does not mean the analysis failed: the results are in the raw output file either way, and the traces can be added manually. Check the FRA device's terminals and the probe count against the table above before looking for a problem in the circuit.
+
+### Parameters
+
+| Parameter | Description | Units | Default |
+|-----------|-------------|-------|---------|
+| delay | Stimulus start time | sec | 0 |
+| fstart | Frequency sweep start value | Hz | — |
+| fend | Frequency sweep end value | Hz | — |
+| oct | Points per octave for sweep resolution. Supported values: 0.25, 0.5, 1, 2, 3, 4 | — | 4 |
+| fcoarse | Upper frequency for coarse stepping in the sweep | Hz | — |
+| flist | List of specific frequencies (applied individually) | Hz | — |
+| nmax | Maximum number of simultaneously injected harmonic frequencies | — | 1 |
+| pp0 | Stimulus amplitude for frequencies below `f0` (if specified) | V (gain) / A (impedance) | 1mV (gain) / 10mA (impedance) |
+| pp1 | Stimulus amplitude for frequencies above `f1` | V (gain) / A (impedance) | — |
+| f0 | Maximum frequency for `pp0` | Hz | — |
+| f1 | Minimum frequency for `pp1` | Hz | — |
+| pp | Piecewise logarithmic amplitude vs. frequency | Hz,V pairs | — |
+| tavgmin | Minimum analysis time for each stimulus frequency | sec | 0 |
+| tsettle | Settling time at each frequency before analysis begins | sec | 10/fend |
+| rpar | Parallel resistance | Ohm | 1m (gain) / 1T (impedance) |
+| acmag | AC current magnitude (`.ac` simulations only) | A | 0 |
+| acphase | AC current phase (`.ac` simulations only) | degrees | 0 |
+| ac | AC current magnitude, phase pair (`.ac` simulations only) | A,degrees | 0,0 |
+| enabled | Analyzer enable (0 or 1) | — | 1 |
+| refnode | Reference node for voltage gain analysis | — | 0 |
+| intnode | Intermediate node for additional gain analysis | — | — |
+
+---
+
+## & — Frequency Response Analysis Probe
+
+**Symbols**: FRAPROBE
+
+```spice
+&xxx o+ o- i+ i-
+```
+
+Used in conjunction with an [`@` Frequency Response Analyzer](#--frequency-response-analyzer) during a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the probe analyzes gain between any two differential points. It accepts no control parameters — the stimulus is controlled entirely by the FRA device.
+
+**Result**: the complex quantity `V(o+,o-) / V(i+,i-)` versus frequency, written to the FRA complex raw output file `<circuit>.fra_<fra_instance_name>.raw` as a signal named `probe_<fraprobe_instance_name>`. Whether that signal is plotted automatically depends on the FRA device's terminals and how many probes are present — see [Results and Bode Plot](#results-and-bode-plot).
+
+The differential input and output pairs suit applications such as the following, each with an example schematic in **File > Open Examples > Educational\FRA\**:
+
+- SMPS micromodules with integrated top feedback resistors — `fra_eg8_ltm8074_probe.asc`
+- Analyzing the gain of an intermediate portion of a control loop — for example from the compensation point of an SMPS to the output, known as the modulator gain — `&mod` in `fra_eg6_LT3763_probe_current.asc`, which measures from the compensation point VC to the output current sense
+- Differential feedback, such as current-feedback circuits — `&1` in the same example, taken differentially across the output current sense resistor
+- Inverting (negative output) SMPS circuits — `fra_eg10_LT8609_inverting_probe.asc`
+
+For differential feedback, prefer this device over the FRA device's [`refnode`](#--frequency-response-analyzer) parameter.
+
+### Multiple Loops and Probes
+
+A circuit with more than one feedback loop can have its loops analyzed simultaneously by configuring a separate FRA device for each independent loop.
+
+Probes may also be used in simulations with multiple FRA devices, but **each probe must be associated with a specific FRA device, and LTspice makes that association by instance name** — `&1` pairs with `@1`, `&2` with `@2`, and so on.
+
+**Examples**: in that same directory, any schematic with "probe" in the filename demonstrates the probe device.
 
 ---
 

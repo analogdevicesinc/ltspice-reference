@@ -49,6 +49,9 @@ Within each menu, underlined letters (mnemonics) can be pressed directly without
   - Resistor
 - **Save** (Ctrl+S) — Save current file
 - **Save As...** (Ctrl+Shift+S) — Save with new filename
+- **Execute .MEAS Script** — Run a script of `.MEAS` statements against the displayed
+  waveform data, without re-simulating. Requires the **waveform window** to be the
+  active window.
 - **Close** (Ctrl+W) — Close current file
 - **Print** (Ctrl+P)
 - **Print Preview** (V)

@@ -21,10 +21,11 @@ Complete reference for viewing, analyzing, and exporting simulation results.
 5. [Axis Control](#axis-control)
 6. [Plot Panes](#plot-panes)
 7. [Cursors](#cursors)
-8. [Color Control](#color-control)
-9. [Plot Configurations](#plot-configurations)
-10. [Fast Access File Format](#fast-access-file-format)
-11. [Exporting Data](#exporting-data)
+8. [Executing .MEAS Scripts](#executing-meas-scripts)
+9. [Color Control](#color-control)
+10. [Plot Configurations](#plot-configurations)
+11. [Fast Access File Format](#fast-access-file-format)
+12. [Exporting Data](#exporting-data)
 
 ---
 
@@ -221,6 +222,32 @@ Each pane has independent autoscaling.
 - Mouse position always displayed on status bar
 - Drag-zoom box size shown (quick measurement)
 - Time differences converted to frequency
+
+---
+
+## Executing .MEAS Scripts
+
+`.MEAS` statements are evaluated in post processing on the saved waveform dataset, so
+they can be run against data already on disk — **no re-simulation required**.
+
+**Menu**: With the waveform window active, **File > Execute .MEAS Script**
+
+This runs a script of `.MEAS` statements against the displayed dataset and writes the
+results to the log (**View > SPICE Output Log**, Ctrl+L). Use it to add or revise
+measurements after a long run, or to iterate on measurement expressions against a fixed
+dataset.
+
+**Script file**: can be a plain netlist — LTspice reads only the `.MEAS` statements and
+ignores every other line, so the circuit's own `.net` or `.cir` file works as-is.
+
+**Accuracy**: results are limited by the accuracy of the waveform data *after*
+compression. Disable compression for precise measurements:
+
+```spice
+.options plotwinsize=0   ; disable compression
+```
+
+*See [MEAS-REFERENCE.md](MEAS-REFERENCE.md) for `.MEAS` syntax and examples.*
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: LTspice .MEAS Statement Reference
-description: .MEAS statement examples for AC, noise, transient, and DC analysis — extracting measurements from simulations.
+description: .MEAS statement examples for AC and noise analysis — complete netlists paired with the log output they produce.
 version: "24+"
 ---
 
@@ -14,10 +14,40 @@ This document contains `.MEAS` statement examples for various simulation types.
 
 ## Table of Contents
 
+- [How .MEAS Statements Are Executed](#how-meas-statements-are-executed)
 - [.MEAS with AC Analysis - Key Functions](#meas-with-ac-analysis---key-functions)
 - [AC Analysis .MEAS Examples](#ac-analysis-meas-examples)
 - [.MEAS with Noise Analysis - Key Functions](#meas-with-noise-analysis---key-functions)
 - [Noise Analysis .MEAS Examples](#noise-analysis-meas-examples)
+
+## How .MEAS Statements Are Executed
+
+`.MEAS` statements are evaluated in **post processing**, after the simulation has
+completed — they operate on the saved waveform dataset, not on the running simulation.
+
+### Running a .MEAS Script Without Re-Simulating
+
+Because measurements are pure post processing, you can write `.MEAS`
+statements and execute them against an existing dataset:
+
+1. Make the **waveform window** the active window
+2. Execute menu command **File > Execute .MEAS Script**
+
+This re-measures the waveform data already on disk, so there is no need to re-run the
+simulation to add or change a measurement. Useful for long transient runs, and for
+iterating on measurement expressions against a fixed dataset.
+
+**The script can be an ordinary netlist.** LTspice ignores everything in the file except
+the `.MEAS` statements — component lines, other dot commands, and the title line are all
+skipped. So you can point **Execute .MEAS Script** straight at the circuit's own `.net`
+or `.cir` file: edit or add `.MEAS` lines there, execute the script, and read the new
+results without touching the simulation.
+
+The usual alternative is to place `.MEAS` statements on the schematic as a SPICE
+directive (or in the netlist alongside the other simulation commands), in which case
+they run automatically at the end of each simulation.
+
+
 
 ## .MEAS with AC Analysis - Key Functions
 
@@ -748,6 +778,9 @@ low_freq_noise_density: V(onoise) =1.47854748889e-07 at 1
 - **At 1 Hz**: 1/f noise dominates with corner at Enk = 100 Hz, increasing total noise to ~148 nV/√Hz
 - All noise sources are referred to output
 
+---
+
+*See also: [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md) for `.MEASURE` syntax and the full range of measurement keywords, [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md) for querying `.STEP`'ed results from the SQLite `.db` file*
 ---
 
 *Documentation source: [github.com/analogdevicesinc/ltspice-reference](https://github.com/analogdevicesinc/ltspice-reference)*

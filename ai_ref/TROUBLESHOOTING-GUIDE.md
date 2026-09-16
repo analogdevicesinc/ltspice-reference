@@ -27,12 +27,13 @@ Diagnosing and fixing convergence failures, performance issues, and common simul
 11. [Steady-State Detection](#steady-state-detection)
 12. [Memory and Performance](#memory-and-performance)
 13. [Sweep Directive Errors](#sweep-directive-errors)
+14. [Blank Bode Plot After .FRA](#blank-bode-plot-after-fra)
 
 ---
 
 ## Diagnostic Information Collection
 
-When troubleshooting LTspice issues (especially FRA, convergence, or model-related problems), collect this diagnostic information first:
+When troubleshooting LTspice issues (especially [FRA](#blank-bode-plot-after-fra), convergence, or model-related problems), collect this diagnostic information first:
 
 ### 1. LTspice Version
 - Go to **Help → About LTspice**
@@ -313,6 +314,8 @@ Turn off compression (`plotwinsize=0`) when:
 - Using `.four` statements
 - Doing FFT in post-analysis
 - Need exact sample-by-sample data
+- Precise `.meas` results are required — `.meas` runs in post processing on the saved
+  waveform data, so its accuracy is limited by that data after compression
 
 ```spice
 .options plotwinsize=0
@@ -460,6 +463,28 @@ than `.step`. It also accepts a narrower set of sweep items.
 
 See [SIMULATION-COMMANDS-REFERENCE.md](SIMULATION-COMMANDS-REFERENCE.md#dc--dc-sweep)
 for the full `.dc` grammar.
+
+---
+
+## Blank Bode Plot After .FRA
+
+Unlike the sweep errors above, a blank Bode plot usually means the run **succeeded**.
+The results are in `<circuit>.fra_<fra_instance_name>.raw`; only the automatic trace
+selection declined to pick anything.
+
+LTspice auto-plots a trace in just two configurations, and every other combination of
+grounded FRA terminal and probe count leaves the plot blank. Check the `@` device's
+terminals and the number of `&` probes against the
+[auto-plot table](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer), then add
+what you need by hand with **View > Add Trace** (A) — the FRA device's own trace, or
+`probe_<fraprobe_instance_name>` for a probe.
+
+**The other FRA failure mode looks nothing like this.** A Bode plot that appears complete
+and plausible can still be wrong — when `delay`, stimulus amplitude, `tsettle`, or
+`tavgmin` are misset, or when the FRA device does not interrupt every feedback path.
+Nothing reports it. Work through
+[SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra) in order rather than trusting
+the first plot that appears.
 
 ---
 
