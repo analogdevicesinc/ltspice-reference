@@ -464,8 +464,9 @@ Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not
 1. **Justification** — choose `Left`, `Right`, `VTop`, `VBottom`, etc. so the string grows *away* from the symbol body and away from nearby wires.
 2. **Clearance** — keep ≥ 16 px between the nearest edge of the text and the symbol outline, and from other objects.
 3. **Re-check after rotating** — evaluate attribute placement in the *final* orientation, not the one you placed it in.
-4. **Long values** — strings like `PULSE(...)` need real room; shift them clear of dense routing rather than overlapping the symbol to save space.
+4. **Long values** — strings like `PULSE(...)` need real room; place the part where its value has open space rather than letting the text overlap the symbol or dense routing.
 5. **Fallback** — if no placement clears the circuitry on a crowded sheet, keep the original `WINDOW` and justification. Do not make the layout worse with speculative moves.
+6. **BJTs and MOSFETs** — leave their attribute text (instance name, value, etc.) at the symbol's default `WINDOW` positions except in rare cases. If that text would overlap something, move the transistor or the neighbouring parts and wires instead.
 
 ### Text Keep-Out
 
@@ -483,7 +484,7 @@ Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not
 
 **Net labels need the space beyond the stub, not on it.** LTspice draws the name adjacent to the flag point rather than on the wire, so the sheet past the end of the stub is what must be clear — one more reason a named-net stub runs its full 48 px into open space instead of stopping where a rail already runs.
 
-**Move the text, then the part, then the sheet.** Re-justify first, since that is free. If no justification clears the drawing, move the part or spread the block — the 96 px spacing floor is a minimum for crowded regions, not a target to design toward, and sheet area costs nothing. Only when the part genuinely cannot move should you fall back to the symbol's original `WINDOW` and justification, per [Attribute Text Placement](#attribute-text-placement) rule 5: an overlap left at the default position is at least the one a reader expects, and is better than a speculative move that makes the region worse.
+**Move the part before the text.** The usual first choice is to move the part or spread the block until its attribute text clears the drawing at its default position — the 96 px spacing floor is a minimum for crowded regions, not a target to design toward. Moving attribute text is a judgement call, acceptable when moving the part would cost more, such as extra wire jogs or excessive empty space. A moved string must stay close enough to its own part that it is clearly associated with it, not with a neighbour. On BJTs and MOSFETs it should very rarely be moved at all ([Attribute Text Placement](#attribute-text-placement) rule 6). If neither the part nor the text has a clean option, keep the symbol's default `WINDOW` and justification, per rule 5: an overlap left at the default position is at least the one a reader expects, and is better than a speculative move that makes the region worse.
 
 **Vertical stacks need vertical room too.** Keep 32 px between `TEXT` baselines in the directive block, then check both ends of the stack: the first line must clear the ground bus above it, and the last line must not run past the bottom of the sheet. A block that outgrows its space is [grown downward with the sheet](#spice-directive-placement), never upward into the circuit.
 

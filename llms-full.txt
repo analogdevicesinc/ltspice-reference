@@ -2403,7 +2403,7 @@ change a measurement. The script file may be an ordinary netlist — everything 
 directly.
 
 **Accuracy caveat**: because `.meas` reads the saved waveform data, its accuracy is
-limited by that data *after* compression. Disable or loosen compression
+limited by that data *after* compression. Disable compression
 (`.options plotwinsize=0`) for more precise `.meas` output — see
 [Waveform Compression](#waveform-compression).
 
@@ -3220,34 +3220,39 @@ LTspice offers two integration methods (set via `.options method=`):
 
 ## Waveform Compression
 
-LTspice optionally uses lossy compression at runtime to keep `.raw` files manageable.
+LTspice can compress waveform data as it writes the `.raw` file. The compression is **lossy**:
+the saved waveforms keep fewer points than were simulated, so some fidelity is lost. Compression
+is **off by default**, and it is usually best to leave it off.
 
-### Configuration
+### Prefer `.save` or `Tstart` for Disk Space
 
-```spice
-.options plotwinsize=<N>       ; Points per compression window (0=disable)
-.options plotreltol=<val>      ; Relative tolerance (default 0.0025)
-.options plotvntol=<val>       ; Voltage tolerance (default 10u)
-.options plotabstol=<val>      ; Current tolerance (default 1n)
-```
+Compression exists to reduce disk usage. If disk space is a problem, reach for these first — they
+shrink the file without degrading the data that is kept:
 
-### When to Disable Compression
+- **`.save`** to write only the signals you need
+- **`Tstart`** in `.tran` to discard data before the interval of interest
 
-Turn off compression (`plotwinsize=0`) when:
+See [Reducing Data Size](#reducing-data-size).
+
+Compression is particularly harmful when:
 - Using `.four` statements
 - Doing FFT in post-analysis
-- Need exact sample-by-sample data
+- Exact sample-by-sample data is needed
 - Precise `.meas` results are required — `.meas` runs in post processing on the saved
   waveform data, so its accuracy is limited by that data after compression
 
+### Enabling and Disabling
+
+Turn compression on or off in **Tools > Settings > Compression**. To override that setting for one
+schematic, add an `.options` directive to it:
+
 ```spice
-.options plotwinsize=0
+.options plotwinsize=0         ; disable compression for this schematic
 ```
 
-### Important Notes
-
-- To configure settings for a specific schematic, add `.options` directive to schematic
-- Leave disabled (default) for most simulations
+If you do enable it, the tolerances that control how much it discards are listed under
+[Waveform Compression](SIMULATION-COMMANDS-REFERENCE.md#waveform-compression) in the `.OPTIONS`
+reference.
 
 ---
 
@@ -3304,6 +3309,8 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
 - All waveform data stored on **disk** during simulation
 - Only plotted traces loaded into RAM
 - No particular file size limit — can handle multi-gigabyte `.raw` files
+- Marching waveforms (plotting while the simulation runs) has a negligible effect on both run time
+  and memory, so turning it off is not worth doing for performance
 
 ### Reducing Data Size
 
@@ -3319,9 +3326,7 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
    .tran 0 10m 9m    ; only save last 1ms of 10ms simulation
    ```
 
-4. **Enable waveform compression** (default is disabled)
-
-5. **Skip the startup transient with `loadstate`** — save the state once the circuit has settled,
+4. **Skip the startup transient with `loadstate`** — save the state once the circuit has settled,
    then start later runs from it:
    ```spice
    .tran 1m savestate   ; run once
@@ -3330,6 +3335,9 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
    Unlike `Tstart`, which simulates the startup and merely discards the data, this does not
    simulate it at all — so it saves run time as well as disk. See
    [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management).
+
+5. **Enable waveform compression** only as a last resort — it is lossy and off by default. See
+   [Waveform Compression](#waveform-compression).
 
 ### Emergency: Running Out of Disk Space
 
@@ -3878,8 +3886,9 @@ Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not
 1. **Justification** — choose `Left`, `Right`, `VTop`, `VBottom`, etc. so the string grows *away* from the symbol body and away from nearby wires.
 2. **Clearance** — keep ≥ 16 px between the nearest edge of the text and the symbol outline, and from other objects.
 3. **Re-check after rotating** — evaluate attribute placement in the *final* orientation, not the one you placed it in.
-4. **Long values** — strings like `PULSE(...)` need real room; shift them clear of dense routing rather than overlapping the symbol to save space.
+4. **Long values** — strings like `PULSE(...)` need real room; place the part where its value has open space rather than letting the text overlap the symbol or dense routing.
 5. **Fallback** — if no placement clears the circuitry on a crowded sheet, keep the original `WINDOW` and justification. Do not make the layout worse with speculative moves.
+6. **BJTs and MOSFETs** — leave their attribute text (instance name, value, etc.) at the symbol's default `WINDOW` positions except in rare cases. If that text would overlap something, move the transistor or the neighbouring parts and wires instead.
 
 ### Text Keep-Out
 
@@ -3897,7 +3906,7 @@ Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not
 
 **Net labels need the space beyond the stub, not on it.** LTspice draws the name adjacent to the flag point rather than on the wire, so the sheet past the end of the stub is what must be clear — one more reason a named-net stub runs its full 48 px into open space instead of stopping where a rail already runs.
 
-**Move the text, then the part, then the sheet.** Re-justify first, since that is free. If no justification clears the drawing, move the part or spread the block — the 96 px spacing floor is a minimum for crowded regions, not a target to design toward, and sheet area costs nothing. Only when the part genuinely cannot move should you fall back to the symbol's original `WINDOW` and justification, per [Attribute Text Placement](#attribute-text-placement) rule 5: an overlap left at the default position is at least the one a reader expects, and is better than a speculative move that makes the region worse.
+**Move the part before the text.** The usual first choice is to move the part or spread the block until its attribute text clears the drawing at its default position — the 96 px spacing floor is a minimum for crowded regions, not a target to design toward. Moving attribute text is a judgement call, acceptable when moving the part would cost more, such as extra wire jogs or excessive empty space. A moved string must stay close enough to its own part that it is clearly associated with it, not with a neighbour. On BJTs and MOSFETs it should very rarely be moved at all ([Attribute Text Placement](#attribute-text-placement) rule 6). If neither the part nor the text has a clean option, keep the symbol's default `WINDOW` and justification, per rule 5: an overlap left at the default position is at least the one a reader expects, and is better than a speculative move that makes the region worse.
 
 **Vertical stacks need vertical room too.** Keep 32 px between `TEXT` baselines in the directive block, then check both ends of the stack: the first line must clear the ground bus above it, and the last line must not run past the bottom of the sheet. A block that outgrows its space is [grown downward with the sheet](#spice-directive-placement), never upward into the circuit.
 
@@ -6380,44 +6389,31 @@ These change how much gets simulated, not how accurately.
 
 ### Trade accuracy for speed — validate the setup first
 
-Each of these can change the answer. Establish a result you trust, then apply them and confirm the
+These change the simulation results. Establish a result you trust, then apply them and confirm the
 answer did not move.
 
-- **FRA sweeps**: reduce `tsettle` and `tavgmin` where the circuit responds quickly, use `fcoarse`
-  to coarsen the expensive low-frequency end, and only then consider raising `nmax`. See
-  [Step 8: Speed Up](#step-8-speed-up-optional) and
-  [`nmax`](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer), which puts the circuit's
-  own distortion on the frequencies being measured.
-- **Relaxed `reltol`** gets past a difficult startup quickly. The sound way to use it is to relax
-  tolerance for the startup only, then continue at tight tolerance from a saved state — see
-  [State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).
-- **`method=gear`** cures trap ringing but needs more timesteps for the same accuracy, and can make
-  an unstable circuit appear stable. See
-  [Integration Methods](TROUBLESHOOTING-GUIDE.md#integration-methods).
-- **Waveform compression** is lossy. See
-  [Waveform Compression](TROUBLESHOOTING-GUIDE.md#waveform-compression).
+The cost need not apply to the whole run. `.options` take effect for an entire run, but a run can
+be split into segments with `savestate`/`loadstate`, each with its own tolerances: loose through
+the non-critical or troublesome portions — a startup transient, a settling interval, a
+hard-to-converge transition — and tight through the portions you measure. See
+[State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).
 
-### Reduce disk and memory rather than run time
+- **Raised `trtol`** lets the simulator take larger time steps by tolerating more truncation error
+  per step. Fast edges, ripple, and ringing are the first details to lose resolution, so compare
+  them against a run at the default value. See
+  [.OPTIONS](SIMULATION-COMMANDS-REFERENCE.md#options--simulator-options).
+- **Relaxed `reltol`** loosens the error criterion every node and branch must meet at each time
+  point, so the run both goes faster and gets through hard-to-converge stretches more easily. The
+  accuracy loss is just as broad, which makes it a candidate for confining to the segments
+  described above rather than setting for the whole run. See
+  [Improve Transient Convergence](TROUBLESHOOTING-GUIDE.md#improve-transient-convergence) for
+  typical values.
 
-Listed so they are not mistaken for run-time savings — the circuit is still simulated in full, only
-less of the result is kept.
+### Not run-time savings
 
-- **`.save`** limits which traces are written
-  ([.SAVE](SIMULATION-COMMANDS-REFERENCE.md#save--limit-saved-data)); unchecking the subcircuit save
-  defaults does the same for internal node voltages and device currents.
-- **`Tstart`** discards data before a given time, but still simulates that time.
-- For both, see [Reducing Data Size](TROUBLESHOOTING-GUIDE.md#reducing-data-size) and
-  [Memory and Performance](TROUBLESHOOTING-GUIDE.md#memory-and-performance).
-
-Turning marching waveforms off is *not* worth doing for performance — its effect on both run time
-and memory is negligible.
-
-### Speeds viewing, not simulating
-
-- **Fast Access conversion** reorganizes a finished `.raw` file so the waveform viewer can plot from
-  it quickly — roughly a factor equal to the number of saved traces. It does not make the
-  simulation any faster, and the conversion itself can take longer than the original run. See
-  [Fast Access File Format](WAVEFORM-VIEWER-GUIDE.md#fast-access-file-format).
+`.save` and `Tstart` shrink the stored data, but the circuit is still simulated in full. Turning
+off marching waveforms makes a negligible difference to both run time and memory. See
+[Memory and Performance](TROUBLESHOOTING-GUIDE.md#memory-and-performance).
 
 ---
 
