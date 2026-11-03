@@ -1,7 +1,7 @@
 ---
 title: LTspice Schematic Design and Modification Guide
 description: The .asc file format, schematic editing, symbols, and hierarchy — including Windows-1252 encoding caveats.
-version: "24+"
+version: "26.1.2+"
 ---
 
 [← AI Reference](README.md)
@@ -91,7 +91,7 @@ The remainder consists of element declarations using these keywords:
 
 ### Pin World-Coordinate Calculation
 
-A `SYMBOL` placed at `(sx, sy)` has pin world-coordinates determined by applying the orientation transform to each pin's local offset `(px, py)` from the `.asy` file:
+A `SYMBOL` placed at `(sx, sy)` has pin world-coordinates determined by applying the orientation transform to each pin's local offset `(px, py)`, as tabulated in [Standard Symbol Geometry](#standard-symbol-geometry-local-coordinates) or returned by `get_symbol_content`:
 
 | Orientation | world_x | world_y |
 |-------------|---------|---------|
@@ -108,51 +108,56 @@ A `SYMBOL` placed at `(sx, sy)` has pin world-coordinates determined by applying
 
 Mirroring also swaps which pin lands left versus right, so re-derive every pin after changing orientation rather than assuming the previous left/right assignment still holds.
 
-### Standard Symbol Pin Offsets (local coordinates from .asy files)
+### Standard Symbol Geometry (local coordinates)
 
-Each pin is listed as `name[n] = (px, py)`, where `n` is the **SPICE netlist order** — the position the pin occupies on the generated netlist line. Placement alone does not tell you node order, so for any device with three or more pins the bracketed number is what matters.
+**The table below is the first and, for the symbols it lists, the only source of symbol geometry you need.** It is a cached copy of the `get_symbol_content` tool's own output for the primitives, so routine work needs neither a round trip nor a file read. Each pin reads `name[n] = (px, py)` followed by its exit direction, where `n` is the **SPICE netlist order** — the position the pin occupies on the generated netlist line. Placement alone does not tell you node order, so for any device with three or more pins the bracketed number is what matters. Exit arrows are local directions at R0, remembering that **+y points down**: ↑ up, ↓ down, ← left, → right. **Keep-out** is the box a wire must stay out of, also local at R0. It unions the drawn ink with every visible pin anchor and **excludes** attribute text, which is why `voltage`'s box starts at its `+` pin rather than at the circle 8 px below it, and why clearing text is a separate rule with its own margin ([Text Keep-Out](#text-keep-out)). These are the tool's own figures, so a few edges land **off-grid** (`ind` at x=5, `FerriteBead2` at ±9) where a sampled arc stops between grid lines. That is the real edge; do not round it outward and then treat the rounded box as authoritative.
 
-| Symbol | Prefix | Pins |
-|--------|--------|------|
-| `res` | R | `A[1]=(16,16)`  `B[2]=(16,96)` |
-| `res2` | R | `A[1]=(16,0)`  `B[2]=(16,64)` |
-| `ind`, `ind2` | L | `A[1]=(16,16)`  `B[2]=(16,96)` |
-| `cap` | C | `A[1]=(16,0)`  `B[2]=(16,64)` |
-| `polcap` | C | `A[1]=(16,0)`  `B[2]=(16,64)` |
-| `voltage` | V | `+[1]=(0,16)`  `-[2]=(0,96)` |
-| `current` | I | `+[1]=(0,0)`  `-[2]=(0,80)` |
-| `diode`, `schottky`, `zener`, `LED` | D | `+[1]=(16,0)`  `-[2]=(16,64)` |
-| `npn`, `npn2`, `npn3` | QN | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)` |
-| `npn4` | QN | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)`  `S[4]=(64,48)` |
-| `pnp`, `pnp2` | QP | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)` |
-| `pnp4` | QP | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)`  `S[4]=(64,48)` |
-| `lpnp` | QP | `C[1]=(64,0)`  `B[2]=(0,48)`  `E[3]=(64,96)`  `S[4]=(64,48)` |
-| `nmos` | MN | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)` |
-| `pmos` | MP | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)` |
-| `nmos4` | MN | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)`  `B[4]=(48,48)` |
-| `pmos4` | MP | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)`  `B[4]=(48,48)` |
-| `njf` | JN | `D[1]=(48,0)`  `G[2]=(0,64)`  `S[3]=(48,96)` |
-| `pjf` | JP | `D[1]=(48,0)`  `G[2]=(0,64)`  `S[3]=(48,96)` |
-| `mesfet` | Z | `D[1]=(48,0)`  `G[2]=(0,80)`  `S[3]=(48,96)` |
-| `sw` | S | `A[1]=(0,16)`  `B[2]=(0,96)`  `NC+[3]=(-48,80)`  `NC-[4]=(-48,32)` |
-| `csw` | W | `+[1]=(0,0)`  `-[2]=(0,80)` |
-| `e` | E | `+[1]=(0,16)`  `-[2]=(0,96)`  `P[3]=(-48,32)`  `N[4]=(-48,80)` |
-| `e2` | E | `+[1]=(0,16)`  `-[2]=(0,96)`  `P[3]=(-48,80)`  `N[4]=(-48,32)` |
-| `f` | F | `+[1]=(0,0)`  `-[2]=(0,80)` |
-| `g` | G | `+[1]=(0,96)`  `-[2]=(0,16)`  `NC+[3]=(-48,32)`  `NC-[4]=(-48,80)` |
-| `g2` | G | `+[1]=(0,96)`  `-[2]=(0,16)`  `NC+[3]=(-48,80)`  `NC-[4]=(-48,32)` |
-| `h` | H | `+[1]=(0,16)`  `-[2]=(0,96)` |
-| `bv` | B | `+[1]=(0,16)`  `-[2]=(0,96)` |
-| `bi` | B | `+[1]=(0,0)`  `-[2]=(0,80)` |
-| `bi2` | B | `+[1]=(0,80)`  `-[2]=(0,0)` |
-| `tline` | T | `I1[1]=(-48,-16)`  `R1[2]=(-48,16)`  `I2[3]=(48,-16)`  `R2[4]=(48,16)` |
-| `ltline` | O | `I1[1]=(-48,-16)`  `R1[2]=(-48,16)`  `I2[3]=(48,-16)`  `R2[4]=(48,16)` |
-| `load` | I | `A[1]=(16,0)`  `B[2]=(16,64)` |
-| `load2` | I | `+[1]=(0,0)`  `-[2]=(0,80)` |
-| `FerriteBead`, `FerriteBead2` | L_Ferrite_Bead | `A[1]=(0,-32)`  `B[2]=(0,32)` |
-| `fra` | @ | `OUT[1]=(0,-64)`  `IN[2]=(0,0)` |
-| `fraprobe` | & | `O+[1]=(48,-80)`  `O[2]=(48,-16)`  `I+[3]=(-48,-80)`  `I[4]=(-48,-16)` |
-| `ISO16750-2`, `ISO7637-2` | X | `+[1]=(0,0)`  `-[2]=(0,80)` |
+| Symbol | Prefix | Keep-out | Pins |
+|--------|--------|----------|------|
+| `res` | R | (0,16)–(32,96) | `A[1]=(16,16)`↑  `B[2]=(16,96)`↓ |
+| `res2` | R | (0,0)–(32,64) | `A[1]=(16,0)`↑  `B[2]=(16,64)`↓ |
+| `ind` | L | (5,16)–(32,96) | `A[1]=(16,16)`↑  `B[2]=(16,96)`↓ |
+| `ind2` | L | (4,16)–(32,96) | `A[1]=(16,16)`↑  `B[2]=(16,96)`↓ |
+| `cap` | C | (0,0)–(32,64) | `A[1]=(16,0)`↑  `B[2]=(16,64)`↓ |
+| `polcap` | C | (0,0)–(32,64) | `A[1]=(16,0)`↑  `B[2]=(16,64)`↓ |
+| `voltage` | V | (-32,16)–(32,96) | `+[1]=(0,16)`↑  `-[2]=(0,96)`↓ |
+| `current` | I | (-32,0)–(32,80) | `+[1]=(0,0)`↑  `-[2]=(0,80)`↓ |
+| `diode`, `schottky` | D | (0,0)–(32,64) | `+[1]=(16,0)`↑  `-[2]=(16,64)`↓ |
+| `zener` | D | (-4,0)–(36,64) | `+[1]=(16,0)`↑  `-[2]=(16,64)`↓ |
+| `LED` | D | (0,0)–(72,64) | `+[1]=(16,0)`↑  `-[2]=(16,64)`↓ |
+| `npn`, `npn2`, `npn3` | QN | (0,0)–(64,96) | `C[1]=(64,0)`↑  `B[2]=(0,48)`←  `E[3]=(64,96)`↓ |
+| `npn4` | QN | (0,0)–(64,96) | `C[1]=(64,0)`↑  `B[2]=(0,48)`←  `E[3]=(64,96)`↓  `S[4]=(64,48)`→ |
+| `pnp`, `pnp2` | QP | (0,0)–(64,96) | `C[1]=(64,0)`↑  `B[2]=(0,48)`←  `E[3]=(64,96)`↓ |
+| `pnp4` | QP | (0,0)–(64,96) | `C[1]=(64,0)`↑  `B[2]=(0,48)`←  `E[3]=(64,96)`↓  `S[4]=(64,48)`→ |
+| `lpnp` | QP | (0,0)–(64,96) | `C[1]=(64,0)`↑  `B[2]=(0,48)`←  `E[3]=(64,96)`↓  `S[4]=(64,48)`→ |
+| `nmos` | MN | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,80)`←  `S[3]=(48,96)`↓ |
+| `pmos` | MP | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,80)`←  `S[3]=(48,96)`↓ |
+| `nmos4` | MN | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,80)`←  `S[3]=(48,96)`↓  `B[4]=(48,48)`→ |
+| `pmos4` | MP | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,80)`←  `S[3]=(48,96)`↓  `B[4]=(48,48)`→ |
+| `njf` | JN | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,64)`←  `S[3]=(48,96)`↓ |
+| `pjf` | JP | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,64)`←  `S[3]=(48,96)`↓ |
+| `mesfet` | Z | (0,0)–(48,96) | `D[1]=(48,0)`↑  `G[2]=(0,80)`←  `S[3]=(48,96)`↓ |
+| `sw` | S | (-48,16)–(32,96) | `A[1]=(0,16)`↑  `B[2]=(0,96)`↓  `NC+[3]=(-48,80)`←  `NC-[4]=(-48,32)`← |
+| `csw` | W | (-32,0)–(32,80) | `+[1]=(0,0)`↑  `-[2]=(0,80)`↓ |
+| `e` | E | (-48,16)–(32,96) | `+[1]=(0,16)`↑  `-[2]=(0,96)`↓  `P[3]=(-48,32)`←  `N[4]=(-48,80)`← |
+| `e2` | E | (-48,16)–(32,96) | `+[1]=(0,16)`↑  `-[2]=(0,96)`↓  `P[3]=(-48,80)`←  `N[4]=(-48,32)`← |
+| `f` | F | (-32,0)–(32,80) | `+[1]=(0,0)`↑  `-[2]=(0,80)`↓ |
+| `g` | G | (-48,16)–(32,96) | `+[1]=(0,96)`↓  `-[2]=(0,16)`↑  `NC+[3]=(-48,32)`←  `NC-[4]=(-48,80)`← |
+| `g2` | G | (-48,16)–(32,96) | `+[1]=(0,96)`↓  `-[2]=(0,16)`↑  `NC+[3]=(-48,80)`←  `NC-[4]=(-48,32)`← |
+| `h` | H | (-32,16)–(32,96) | `+[1]=(0,16)`↑  `-[2]=(0,96)`↓ |
+| `bv` | B | (-32,16)–(32,96) | `+[1]=(0,16)`↑  `-[2]=(0,96)`↓ |
+| `bi` | B | (-32,0)–(32,80) | `+[1]=(0,0)`↑  `-[2]=(0,80)`↓ |
+| `bi2` | B | (-32,0)–(32,80) | `+[1]=(0,80)`↓  `-[2]=(0,0)`↑ |
+| `tline` | T | (-48,-16)–(48,16) | `I1[1]=(-48,-16)`←  `R1[2]=(-48,16)`←  `I2[3]=(48,-16)`→  `R2[4]=(48,16)`→ |
+| `ltline` | O | (-48,-16)–(48,16) | `I1[1]=(-48,-16)`←  `R1[2]=(-48,16)`←  `I2[3]=(48,-16)`→  `R2[4]=(48,16)`→ |
+| `load` | I | (0,0)–(40,64) | `A[1]=(16,0)`↑  `B[2]=(16,64)`↓ |
+| `load2` | I | (-32,0)–(36,80) | `+[1]=(0,0)`↑  `-[2]=(0,80)`↓ |
+| `FerriteBead` | L_Ferrite_Bead | (-16,-32)–(16,32) | `A[1]=(0,-32)`↑  `B[2]=(0,32)`↓ |
+| `FerriteBead2` | L_Ferrite_Bead | (-9,-32)–(9,32) | `A[1]=(0,-32)`↑  `B[2]=(0,32)`↓ |
+| `fra` | @ | (-16,-64)–(16,0) | `OUT[1]=(0,-64)`↑  `IN[2]=(0,0)`↓ |
+| `fraprobe` | & | (-48,-96)–(48,0) | `O+[1]=(48,-80)`→  `O–[2]=(48,-16)`→  `I+[3]=(-48,-80)`←  `I–[4]=(-48,-16)`← |
+| `ISO16750-2`, `ISO7637-2` | X | (-32,0)–(32,80) | `+[1]=(0,0)`↑  `-[2]=(0,80)`↓ |
+| `opamp2` | X | (-32,32)–(32,96) | `In+[1]=(-32,80)`←  `In-[2]=(-32,48)`←  `V+[3]=(0,32)`↑  `V-[4]=(0,96)`↓  `OUT[5]=(32,64)`→ |
 
 **Traps in this table:**
 - `res2` does **not** share `res` pin offsets — it is 64 px between pins, not 80.
@@ -163,11 +168,17 @@ Each pin is listed as `name[n] = (px, py)`, where `n` is the **SPICE netlist ord
 - `polcap` pin names are `A` and `B`, not `+` and `-`, even though the body is drawn polarized. `A[1]` is the positive terminal.
 - The `ISO*` automotive transient sources netlist with prefix **`X`** (a subcircuit), not `V`.
 
-Symbols not tabulated here because their pin sets are large and application-specific — the `SOAtherm-*` thermal models in particular, which range from a single pin (`SOAtherm-PCB`: `Tcenter[1]=(0,0)`) to eight (`SOAtherm-NMOS`) — must be read from their `.asy` files.
+#### Symbols Not in the Table
 
-Anything not listed here: read the `PIN` and `PINATTR SpiceOrder` lines directly out of the part's `.asy` file under `%LOCALAPPDATA%\LTspice\lib\sym\` rather than guessing from a similar-looking part.
+**Everything in this subsection applies only to a symbol the table above does not list.** For a listed symbol the row *is* the answer: do not call a tool, read a file, or re-derive what is already tabulated, and do not let either source argue you out of the row.
 
-**That directory is not flat.** Only the passives, sources, and primitives tabulated above sit in `sym\` itself; the vast majority of installed symbols are one or more levels down, so `sym\<name>.asy` will not resolve for a real device:
+**For an unlisted symbol, call the `get_symbol_content` MCP tool — where the client has it.** That tool is served by the desktop LTspice MCP bridge, which ships with LTspice 26.1.2 and later; a client with no MCP connection, or one talking to an older LTspice, does not have it at all. Pass the symbol name as a `SYMBOL` card spells it — relative path, extension optional, `/` or `\` — and read `keep_out` (the box no wire may cross) and `pins` (each carrying `name`, `x`, `y`, `spice_order` and `exit_direction`) from the response. It resolves names through the same search path the schematic loader uses, so a bare stem such as `LT8609S` resolves as well as `PowerProducts/LT8609S`, and it reports the symbol the user currently has open in the editor, unsaved edits included, in preference to the library copy. A symbol with no geometry and no visible pins has no box to report — a vendor-encrypted part is the case that reaches this in practice — and answers with `keep_out_empty: "true"`, omitting `keep_out`. That is a real outcome rather than an error: treat the drawn extent as unknown and route with generous clearance, rather than reading it as an empty box.
+
+**When the `get_symbol_content` MCP tool is available, do not obtain symbol geometry any other way.** Not by reading the `.asy` file, not by parsing its `LINE`/`RECTANGLE`/`CIRCLE`/`ARC` numbers, not by copying a similar-looking part, and not by reasoning about how the symbol is drawn. Those numbers do not mean what they appear to: an `ARC`'s first four bound a construction ellipse that can be far larger than the curve drawn inside it. Nor does a shared pin set imply a shared body — `LED` carries `diode`'s pins exactly, on a body 40 px wider.
+
+#### Symbol Names and Library Layout
+
+Symbols install under `%LOCALAPPDATA%\LTspice\lib\sym\`, and **that directory is not flat.** Only the passives, sources, and primitives tabulated above sit in `sym\` itself; the vast majority of installed symbols are one or more levels down, so `sym\<name>.asy` will not resolve for a real device:
 
 | Subdirectory | Contents |
 |--------------|----------|
@@ -182,11 +193,7 @@ Anything not listed here: read the `PIN` and `PINATTR SpiceOrder` lines directly
 
 The set of subdirectories varies with the install and with any vendor libraries added since, so treat the list as a starting point rather than a fixed inventory.
 
-Resolve a name by searching recursively rather than guessing the folder:
-
-```powershell
-Get-ChildItem "$env:LOCALAPPDATA\LTspice\lib\sym" -Recurse -Filter '<name>.asy'
-```
+Do not go looking for the folder. Where it is available, `get_symbol_content` accepts a bare stem, resolves it through the loader's own search order, and returns the resolved absolute `path` — which is where the subdirectory spelling for a `SYMBOL` card comes from.
 
 The subdirectory is part of how the symbol is referenced, not just where it happens to be filed. A `SYMBOL` line carries the path relative to `sym\`, with each separator written as a **doubled** backslash:
 
@@ -308,7 +315,7 @@ Changes that only modify SYMATTR values (e.g., changing a component value or mod
 
 1. **Compute pin world-coordinates first**: Before placing a symbol, calculate where its pins will land using the rotation formulas above.
 2. **Verify connections**: Every intended connection must have matching coordinates — either two pins at the same point, or pins at wire endpoints.
-3. **Avoid overlaps**: Ensure symbol bodies do not overlap. A `res` in R90 spans 80 units horizontally; a `voltage` in R0 spans 80 units vertically.
+3. **Avoid overlaps**: Ensure symbol bodies do not overlap. A `res` in R90 spans 80 units horizontally; a `voltage` in R0 spans 80 units vertically. Bodies must also stay clear of wires and text — see [Layout Quality Rules](#layout-quality-rules).
 4. **Use wires for gaps**: If two connected pins are not at the same point, add a `WIRE` line connecting them.
 5. **Ground flags need wire endpoints**: Every `FLAG` must be placed at a wire endpoint or at a point that coincides with a component pin.
 6. **Keep components on the 16-unit grid**: Choose symbol placement coordinates that result in all pin world-coordinates being multiples of 16.
@@ -322,12 +329,14 @@ Connectivity correctness is necessary but not sufficient. A schematic can netlis
 | Rule | Value | Applies to |
 |------|-------|------------|
 | Grid unit | 16 px | everything |
-| Pin exit stub | ≥ 48 px (3 grids) **in the pin's own direction** | every pin |
+| Pin exit stub | ≥ 48 px (3 grids) **outward, in the pin's own direction** | every pin |
 | Flag clearance | ≥ 48 px from the pin it serves | `FLAG`, ground and named |
 | Adjacent pin columns/rows | ≥ 96 px (6 grids) | parts sitting side by side |
 | Series gap along a rail | ≥ 48 px of clear wire | between consecutive devices |
 | Initial component spacing | ~256 px (16 grids) between origins | first placement pass |
+| Symbol body keep-out | no crossing at all; ≥ 16 px of daylight when routing past | every wire segment |
 | Attribute text clearance | ≥ 16 px from the symbol outline | visible `WINDOW` text |
+| Text keep-out | no overlap with any body, wire, flag, or other text | `WINDOW` attributes, `TEXT`, `FLAG` labels |
 | Directive line spacing | 32 px between `TEXT` baselines | the SPICE block |
 
 ### Placement Strategy
@@ -337,7 +346,7 @@ The rules below are constraints to satisfy; this is the process that satisfies t
 **Build in this order:**
 
 1. Place symbols using pin math, so the 48 px and 96 px targets are already met before any wire exists
-2. Route each pin's exit stub, then the rails that join the stubs
+2. Route each pin's exit stub outward, then the rails that join the stubs — around bodies, never across them
 3. Add flags on stubs, never on pins
 4. Place the SPICE directive block below the circuit
 5. Walk the [post-edit layout gate](#post-edit-layout-gate) pin by pin
@@ -367,11 +376,52 @@ The clearance rules above constrain individual parts. These conventions govern t
 
 ### Pin Exit Stub
 
-Every pin leaves its symbol with at least **48 px of wire in the same direction as the pin** before any 90° turn. Vertical pins stub up or down; horizontal pins (an R90/R270 part) stub left or right. Only after that stub may the wire turn to join a rail.
+Every pin leaves its symbol with at least **48 px of wire in the same direction as the pin** before any 90° turn. Only after that stub may the wire turn to join a rail.
+
+**The stub runs outward — away from the symbol body.** "In the pin direction" names an axis *and a sense*: the sense that increases distance from the body. A vertical pin does not stub "up or down" as a free choice. On an R0 `res`, the top pin `A` at local `(16,16)` stubs **up** and the bottom pin `B` at local `(16,96)` stubs **down**. Running `A`'s wire downward past the zig-zag to reach a rail below the part is connectivity-correct and visibly wrong — the wire lies over the symbol it feeds, and the netlist is identical, so nothing will flag it.
+
+**The outward direction is given, not derived.** Every pin in [Standard Symbol Geometry](#standard-symbol-geometry-local-coordinates) carries its exit arrow, and `get_symbol_content` returns an `exit_direction` per pin for everything else. Take it from there, because the shortcuts reached for instead are wrong on common parts. *Which box edge is the pin nearest?* sends an `nmos` gate at local `(0,80)` **down** along the body — 16 px from the bottom edge against 24 px from the left — when it exits **left**. *Which way does the drawn lead point?* holds for axial parts and fails on a BJT, whose collector lead `LINE 16 32 64 0` runs diagonally to a pin that must still be exited **up**.
+
+**A pin may sit inside its own symbol's keep-out box**, so "inside the box" is never by itself evidence of a violation. `nmos5` buries its bulk pin `B` 48 px in; `LTC6416` its `V+` 64 px. Such a pin has no edge normal to read, which is one more reason to take the direction from the tool rather than construct it. A stub leaving its own pin outward stays legal while it is still inside its symbol's box; see [No Wire Across a Symbol Body](#no-wire-across-a-symbol-body).
+
+**An op-amp's `V+`/`V-` can put the shortest path in the forbidden direction.** Both exit vertically, so wherever the supply rail runs horizontally, the shortest path to it is an immediate sideways turn — the one direction the rule above forbids.
+
+**Rotation carries the outward direction with the symbol.** The transform table in [Pin World-Coordinate Calculation](#pin-world-coordinate-calculation) applies unchanged to a direction vector `(dx, dy)` — drop the `sx`/`sy` terms and transform the relative part alone:
+
+| Orientation | outward vector | Orientation | outward vector |
+|-------------|----------------|-------------|----------------|
+| R0 | (dx, dy) | M0 | (-dx, dy) |
+| R90 | (-dy, dx) | M90 | (dy, dx) |
+| R180 | (-dx, -dy) | M180 | (dx, -dy) |
+| R270 | (dy, -dx) | M270 | (-dy, -dx) |
+
+So the `res` top pin's local outward `(0,-1)` becomes `(1,0)` — **right** — at R90, and `(-1,0)` at R270. Derive it per pin rather than assuming "a horizontal part stubs left and right" and then picking whichever side the rail happens to be on; that shortcut is right half the time and folds the stub back over the body the other half. The **mirror order caveat** applies here too: the mirrored rows are the rotation result with its *x* negated, not the rotation of a pre-negated `dx`.
 
 **Never land a perpendicular bus directly on a pin.** This is the single most common generated-schematic tell — attaching a horizontal `OUT` rail straight onto a vertical resistor pin because it "looks like a textbook divider." The netlist is identical either way, so nothing will flag it.
 
 Check *every* pin of *every* symbol, including mid-chain nodes such as the bottom of a divider's upper resistor.
+
+### No Wire Across a Symbol Body
+
+**No wire segment may pass through or over a symbol body.** A wire touches a symbol only at a pin coordinate, and only as the outward stub above. This is a hard rule rather than a preference: LTspice draws wires and symbols in one plane with no occlusion, so a segment crossing a body is visually indistinguishable from a connection to whatever it crosses — a wire over an op-amp triangle reads as a pin that does not exist. The netlist stays silent, because crossing is not connecting.
+
+**The check.** Transform each symbol's local **keep-out box** — from the table above, or from `get_symbol_content` — into **world** coordinates the same way as its pins, then re-normalize the two corners to min/max, since a rotation swaps which corner is which. For every `WIRE x1 y1 x2 y2` and every symbol, a violation is:
+
+- the segment's interior entering the box,
+- the segment running along a box edge, or
+- the segment ending inside the box anywhere other than that symbol's own pin.
+
+**One exemption, and only one:** a segment that starts at one of *that* symbol's own pins and runs outward along the pin's axis. It stays legal for as long as it runs straight outward, which matters because a keep-out box can legitimately extend past the pin the stub leaves from — a pin can sit 16 px or deeper inside its own symbol's box, as `nmos5`'s bulk pin and `LTC6416`'s `V+` do. Every other segment of every other net is subject to the box in full, including a stub belonging to a *neighbouring* symbol.
+
+**Prefer moving the part.** A wire that wants to cross a body is usually reporting a placement fault: the part sits between two nodes that must connect, or in the wrong orientation, or on the wrong side of a rail. Rotating it, or moving it 16–32 px off the rail's row, removes the crossing outright. This is the same [prefer moving parts over adding wire](#placement-strategy) trade as everywhere else.
+
+**When the part must stay put, route around it with ≥ 16 px of daylight.** Take the wire out to a clear column or row and turn there. Two clean right angles read better than a line through a body, and those corners are not what [minimize bends](#placement-strategy) is about — that rule targets *unnecessary* bends.
+
+**Three common causes of crossings:**
+
+- **Rails drawn in one span.** A ground bus or supply rail emitted as a single `WIRE` from the leftmost to the rightmost node sails through everything sitting at that Y. Break the run at each node it is meant to touch, and check each resulting span. Where such a span also passes through a pin coordinate it stops being cosmetic and becomes the routing short from [Auditing an Existing Schematic](#auditing-an-existing-schematic).
+- **Wide-bodied parts.** A vertical column one grid unit clear of a `voltage` source's pins is not clear of the source — its circle is 32 px wider on each side. Check against the keep-out box, never against the pin column.
+- **Late additions.** A part dropped into an apparent gap after routing is finished lands on existing wire. Re-run the crossing check over the **whole sheet** after adding any symbol, not just over the wires added with it.
 
 ### GND Approach
 
@@ -409,13 +459,34 @@ Use the **same center-to-center spacing in all four cases**. The natural mistake
 
 ### Attribute Text Placement
 
-Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not by free `TEXT` elements.
+Visible instance attributes are positioned by the symbol's `WINDOW` offsets, not by free `TEXT` elements. These rules are how to satisfy the [text keep-out](#text-keep-out) for instance names and values specifically.
 
 1. **Justification** — choose `Left`, `Right`, `VTop`, `VBottom`, etc. so the string grows *away* from the symbol body and away from nearby wires.
 2. **Clearance** — keep ≥ 16 px between the nearest edge of the text and the symbol outline, and from other objects.
 3. **Re-check after rotating** — evaluate attribute placement in the *final* orientation, not the one you placed it in.
-4. **Long values** — strings like `PULSE(...)` need real room; shift them clear of dense routing rather than overlapping the symbol to save space.
+4. **Long values** — strings like `PULSE(...)` need real room; place the part where its value has open space rather than letting the text overlap the symbol or dense routing.
 5. **Fallback** — if no placement clears the circuitry on a crowded sheet, keep the original `WINDOW` and justification. Do not make the layout worse with speculative moves.
+6. **BJTs and MOSFETs** — leave their attribute text (instance name, value, etc.) at the symbol's default `WINDOW` positions except in rare cases. If that text would overlap something, move the transistor or the neighbouring parts and wires instead.
+
+### Text Keep-Out
+
+**No text may overlap a symbol body, a wire, a flag, or another string.** Three kinds of text land on a sheet, and the rule binds all three:
+
+| Text | Positioned by | Anchor |
+|------|---------------|--------|
+| Instance name, value, SpiceLine | `WINDOW` offsets on the symbol | symbol origin + offset, transformed with the symbol |
+| Directives and comments | `TEXT x y justification fontSize` | the given coordinate |
+| Net labels | `FLAG x y netname` | drawn beside the flag point |
+
+**Reserve a box, not a point.** A `TEXT` or `WINDOW` line gives an anchor; what has to clear the drawing is the rectangle the rendered string occupies. For the default `fontSize 2`, budget **~16 px of height** and **~8 px per character** of width, and grow the box from the anchor in the justification direction — `Left` grows rightward, `Right` grows leftward, the `V*` justifications grow vertically. Those are deliberately round numbers for reserving space, not metrics: real glyph widths are font-dependent, so treat a box that only just fits as one that does not, and confirm anything crowded by opening the sheet in LTspice.
+
+`PULSE(...)`, `SINE(...)`, and model names run 20–40 characters — 160–320 px of width. A long `SYMATTR Value` is the string most likely to reach across a neighbouring rail, and the overlap is the hardest kind to see in the file: the anchor sits harmlessly beside its own symbol, and the wire the string lands on is declared somewhere else entirely. Two objects that collide on screen can be hundreds of lines apart in the `.asc`, so this check has to be done from computed boxes, not by reading down the file.
+
+**Net labels need the space beyond the stub, not on it.** LTspice draws the name adjacent to the flag point rather than on the wire, so the sheet past the end of the stub is what must be clear — one more reason a named-net stub runs its full 48 px into open space instead of stopping where a rail already runs.
+
+**Move the part before the text.** The usual first choice is to move the part or spread the block until its attribute text clears the drawing at its default position — the 96 px spacing floor is a minimum for crowded regions, not a target to design toward. Moving attribute text is a judgement call, acceptable when moving the part would cost more, such as extra wire jogs or excessive empty space. A moved string must stay close enough to its own part that it is clearly associated with it, not with a neighbour. On BJTs and MOSFETs it should very rarely be moved at all ([Attribute Text Placement](#attribute-text-placement) rule 6). If neither the part nor the text has a clean option, keep the symbol's default `WINDOW` and justification, per rule 5: an overlap left at the default position is at least the one a reader expects, and is better than a speculative move that makes the region worse.
+
+**Vertical stacks need vertical room too.** Keep 32 px between `TEXT` baselines in the directive block, then check both ends of the stack: the first line must clear the ground bus above it, and the last line must not run past the bottom of the sheet. A block that outgrows its space is [grown downward with the sheet](#spice-directive-placement), never upward into the circuit.
 
 ### Post-Edit Layout Gate
 
@@ -425,15 +496,16 @@ Run this after **every** change that creates a schematic or adds or moves symbol
 
 1. **Compute pins, not origins** — derive every pin's world coordinate from the pin table plus the orientation transform; wire endpoints must hit those coordinates.
 2. **Scan for diagonals** — read every `WIRE x1 y1 x2 y2` line and check whether it changes **both** X and Y. No wire may. Replace each diagonal with an orthogonal pair of segments through an explicit corner point. This is a purely mechanical text check and catches the most visually obvious defect in the file.
-3. **Pin exit stubs** — ≥ 48 px in the pin direction, on every pin, with no perpendicular bus landing on a pin.
-4. **Series gaps** — ≥ 48 px of clear wire between consecutive devices on a rail.
-5. **Adjacent spacing** — ≥ 96 px between the closest pins of side-by-side parts.
-6. **Ground** — only vertical wires touch `FLAG ... 0`; horizontal T-junctions are ≥ 48 px from the flag and from other pins.
-7. **Flags** — every flag lies on a wire, ≥ 48 px from the pin it serves, on the pin-direction stub.
-8. **Directives** — below the circuit, non-overlapping.
-9. **Attribute text** — clears symbols and wires where practical.
-10. **Netlist confirm** — intended connectivity, no accidental shorts, labels on the intended nodes, and every `NC_*` node accounted for as an intentionally open pin.
-11. **Re-gate after late edits** — if anything changed after step 10, return to step 1.
+3. **Pin exit stubs** — ≥ 48 px on every pin, running **outward** in the pin's own direction, with no stub folded back along the body and no perpendicular bus landing on a pin.
+4. **Body crossings** — no `WIRE` segment enters, runs along the edge of, or terminates inside any symbol's world keep-out box. The only legal contact is that symbol's own pin, exited outward.
+5. **Series gaps** — ≥ 48 px of clear wire between consecutive devices on a rail.
+6. **Adjacent spacing** — ≥ 96 px between the closest pins of side-by-side parts.
+7. **Ground** — only vertical wires touch `FLAG ... 0`; horizontal T-junctions are ≥ 48 px from the flag and from other pins.
+8. **Flags** — every flag lies on a wire, ≥ 48 px from the pin it serves, on the pin-direction stub.
+9. **Directives** — below the circuit, non-overlapping.
+10. **Text keep-out** — reserve a box for every instance name, value, directive, comment, and net label, and confirm none of those boxes lands on a symbol body, a wire, a flag, or another string. Where a crowded sheet leaves no clear box, the default `WINDOW` fallback applies — note it rather than silently accepting a random overlap.
+11. **Netlist confirm** — intended connectivity, no accidental shorts, labels on the intended nodes, and every `NC_*` node accounted for as an intentionally open pin.
+12. **Re-gate after late edits** — if anything changed after step 11, return to step 1.
 
 ### When the Gate Does Not Apply
 
@@ -463,6 +535,10 @@ A clean netlist alone is not done, and a successful simulation alone is not done
 - Rebuilding a circuit without re-checking stubs and gaps that the old layout satisfied
 - Wrong rotation or mirror pin math, then "connecting somehow" with extra wire instead of moving the symbol
 - Dropping a late component beside an existing one without re-measuring the 96 px spacing
+- Stubbing a pin the wrong way along its axis, so the wire runs back across the part it feeds
+- Emitting a ground or supply rail as one full-width segment, straight through whatever sits at that Y
+- Rotating a part and re-deriving its pin coordinates but not its stub directions
+- Placing a directive block or a long `Value` string by its anchor point without reserving the box the text occupies
 - Placing a flag on a pin, off-wire, or mid-body instead of on a stub
 - Adding a sideways spur purely to hold a net label
 - Fixing only what surfaces as `NC_*` in the netlist, leaving stub violations invisible and uncorrected
@@ -479,6 +555,9 @@ The gate is written for a schematic you just produced. Auditing one you did not 
 | Unintentionally open pins | `NC_*` nodes in the netlist — see the caveat below before treating any of them as a fault |
 | Placeholder values | `SYMATTR Value` left as a bare `R`, `C`, `L`, or `V` — the symbol default was never filled in |
 | Diagonal wires | Any `WIRE` line changing both X and Y |
+| Wires across bodies | A `WIRE` whose span brackets a symbol's world keep-out box on one axis and falls inside it on the other |
+| Stubs folded back | A wire leaving a pin *toward* its own symbol's keep-out box rather than away from it |
+| Text on the drawing | A `TEXT`, a `WINDOW`-placed attribute, or a `FLAG` label whose reserved box lands on a body, a wire, or another string |
 | Flags on pins | A `FLAG` whose coordinate equals a pin world coordinate instead of sitting on a stub |
 | Stray flags | A `FLAG` at `(0,0)` or otherwise not on any wire — usually a mis-click left behind |
 | Overlapping directives | Two `TEXT` elements with the same or near-identical baseline, or a `TEXT` sitting over the drawing |
@@ -511,6 +590,7 @@ WIRE x1 y1 x2 y2
 - Wires connect at their endpoints.
 - When three or more wires meet at a single point, LTspice automatically creates a junction dot.
 - Wire endpoints must exactly coincide with component pin locations to form connections.
+- **A wire never crosses a symbol body** — it touches a symbol only at a pin, and leaves that pin outward for ≥ 48 px before turning. Crossing is not connecting, so the netlist will not report it; see [No Wire Across a Symbol Body](#no-wire-across-a-symbol-body) and [Pin Exit Stub](#pin-exit-stub).
 
 ### Example
 
@@ -688,7 +768,7 @@ CIRCLE Normal x1 y1 x2 y2
 ARC Normal x1 y1 x2 y2 x3 y3 x4 y4
 ```
 
-(Bounding box + start/end points on the arc)
+`(x1,y1)`–`(x2,y2)` is the bounding box of the **construction ellipse**; `(x3,y3)` and `(x4,y4)` are **rays from that ellipse's centre**, not points on the curve, and the sweep from the first to the second runs counterclockwise on screen. The drawn extent is usually much smaller than the bounding box, so never treat those first four numbers as a keep-out; take a symbol's box from [Standard Symbol Geometry](#standard-symbol-geometry-local-coordinates) or from `get_symbol_content`.
 ---
 
 ## Rotation and Mirroring

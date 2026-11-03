@@ -1,14 +1,14 @@
 ---
 title: LTspice FAQ and Tips
-description: Updates, license, Linux, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
-version: "24+"
+description: Updates, license, Linux, simulation speed, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
+version: "26+"
 ---
 
 [← AI Reference](README.md)
 
 # LTspice FAQ and Tips
 
-Frequently asked questions, efficiency calculations, SMPS Bode plots, platform notes, and resources.
+Frequently asked questions, simulation speed, efficiency calculations, SMPS Bode plots, platform notes, and resources.
 
 ---
 
@@ -18,9 +18,10 @@ Frequently asked questions, efficiency calculations, SMPS Bode plots, platform n
 2. [License and Distribution](#license-and-distribution)
 3. [Running Under Linux](#running-under-linux)
 4. [Settings Overview](#settings-overview)
-5. [Efficiency Calculation](#efficiency-calculation)
-6. [SMPS Bode Plots (FRA)](#smps-bode-plots-fra)
-7. [Additional Resources](#additional-resources)
+5. [Speeding Up Simulations](#speeding-up-simulations)
+6. [Efficiency Calculation](#efficiency-calculation)
+7. [SMPS Bode Plots (FRA)](#smps-bode-plots-fra)
+8. [Additional Resources](#additional-resources)
 
 ---
 
@@ -126,6 +127,61 @@ Access via gear icon or **Tools > Settings**. Configuration sections:
 
 ---
 
+## Speeding Up Simulations
+
+Pointers to the measures documented elsewhere in this reference, grouped by what each one costs
+you. Nothing here is a new setting — follow the links for syntax and caveats.
+
+### Reduce the work the simulator does
+
+These change how much gets simulated, not how accurately.
+
+- **Skip the startup transient with `loadstate`.** Save the settled state once, then start every
+  later run from it. For iterative work — tuning a compensation network, sweeping a component
+  value, repeating an FRA sweep — this is usually the largest single saving available: the startup
+  transient is often most of the run, and it is otherwise re-simulated from scratch every time.
+  Component and parameter values may differ from those the state was saved with, and the run will
+  usually still converge — see
+  [Changing the Circuit Between Save and Load](SIMULATION-COMMANDS-REFERENCE.md#changing-the-circuit-between-save-and-load).
+  See also [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management), and
+  [Step 1](#step-1-verify-basic-operation) for priming an `.fra` sweep this way.
+- **Stop the run when the circuit settles**, using the `steady` modifier rather than guessing a
+  `Tstop` and overshooting it. See
+  [Steady-State Detection](TROUBLESHOOTING-GUIDE.md#steady-state-detection).
+- **Prefer LTspice's native devices and SMPS macromodels** over generic SPICE/PSpice equivalents —
+  the native models exist largely for simulation speed. See
+  [Speed Considerations](DEVICE-MODELS-GUIDE.md#speed-considerations).
+
+### Trade accuracy for speed — validate the setup first
+
+These change the simulation results. Establish a result you trust, then apply them and confirm the
+answer did not move.
+
+The cost need not apply to the whole run. `.options` take effect for an entire run, but a run can
+be split into segments with `savestate`/`loadstate`, each with its own tolerances: loose through
+the non-critical or troublesome portions — a startup transient, a settling interval, a
+hard-to-converge transition — and tight through the portions you measure. See
+[State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).
+
+- **Raised `trtol`** lets the simulator take larger time steps by tolerating more truncation error
+  per step. Fast edges, ripple, and ringing are the first details to lose resolution, so compare
+  them against a run at the default value. See
+  [.OPTIONS](SIMULATION-COMMANDS-REFERENCE.md#options--simulator-options).
+- **Relaxed `reltol`** loosens the error criterion every node and branch must meet at each time
+  point, so the run both goes faster and gets through hard-to-converge stretches more easily. The
+  accuracy loss is just as broad, which makes it a candidate for confining to the segments
+  described above rather than setting for the whole run. See
+  [Improve Transient Convergence](TROUBLESHOOTING-GUIDE.md#improve-transient-convergence) for
+  typical values.
+
+### Not run-time savings
+
+`.save` and `Tstart` shrink the stored data, but the circuit is still simulated in full. Turning
+off marching waveforms makes a negligible difference to both run time and memory. See
+[Memory and Performance](TROUBLESHOOTING-GUIDE.md#memory-and-performance).
+
+---
+
 ## Efficiency Calculation
 
 ### Quick Method
@@ -185,6 +241,27 @@ Uses Middlebrook's method (voltage injection) to measure the loop transfer funct
 
 #### Step 1: Verify Basic Operation
 Run a standard `.tran` simulation to confirm the SMPS starts up and reaches steady state.
+
+Save the settled state while you are here. Steps 3-8 re-run the circuit many times, and every run
+otherwise repeats the whole startup transient:
+
+```spice
+.tran 2m savestate ; verify startup, save the state at the end of the simulation
+```
+
+Then start the FRA runs from it:
+
+```spice
+.fra loadstate
+```
+
+The FRA device's `delay` is absolute simulation time measured from t=0, not time elapsed since the
+run began, so a state saved at or after `delay` has already satisfied it: the state above is saved
+at t=2m, so an FRA device with `delay=1m` starts injecting immediately when that state loads. Leave
+`delay` at the value the un-primed circuit genuinely needs to settle — it costs no run time once the
+state is loaded past it. (Use `savestatetime=<time>` if you need the state captured at a particular
+time rather than at the end of the run.) State files are interchangeable between `.tran` and `.fra`; see
+[State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management).
 
 #### Step 2: Insert FRA Component
 Break the feedback loop and insert the FRA device (prefix `@`) at the injection point. Valid placement must satisfy two criteria:

@@ -76,7 +76,7 @@ LTspice.exe "C:\Projects\MyCircuit\filter.asc"
 | [DEVICE-MODELS-GUIDE.md](DEVICE-MODELS-GUIDE.md) | MOSFET/inductor/opamp models, third-party integration |
 | [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md) | .MEAS SQLite database schema, querying results |
 | [MEAS-REFERENCE.md](MEAS-REFERENCE.md) | .MEAS examples for AC and noise, with expected log output |
-| [FAQ-AND-TIPS.md](FAQ-AND-TIPS.md) | Updates, license, Linux, efficiency, SMPS Bode plots |
+| [FAQ-AND-TIPS.md](FAQ-AND-TIPS.md) | Updates, license, Linux, simulation speed, efficiency, SMPS Bode plots |
 | [ADI-DESIGN-TOOLS-REFERENCE.md](ADI-DESIGN-TOOLS-REFERENCE.md) | ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics |
 
 ---

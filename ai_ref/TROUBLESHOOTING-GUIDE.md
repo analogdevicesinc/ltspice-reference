@@ -1,7 +1,7 @@
 ---
 title: LTspice Troubleshooting Guide
 description: Convergence failures, debugging, and simulator options — diagnosing and fixing common simulation problems.
-version: "24+"
+version: "26+"
 ---
 
 [← AI Reference](README.md)
@@ -15,19 +15,20 @@ Diagnosing and fixing convergence failures, performance issues, and common simul
 ## Table of Contents
 
 1. [Diagnostic Information Collection](#diagnostic-information-collection)
-2. [Convergence Problems — Symptoms](#convergence-problems--symptoms)
-3. [Common Sources of Convergence Failure](#common-sources-of-convergence-failure)
-4. [Debugging with Convergence Reports](#debugging-with-convergence-reports)
-5. [Fix the Circuit](#fix-the-circuit)
-6. [Improve DC Operating Point Convergence](#improve-dc-operating-point-convergence)
-7. [Improve Transient Convergence](#improve-transient-convergence)
-8. [Integration Methods](#integration-methods)
-9. [Use Initial Conditions (UIC)](#use-initial-conditions-uic)
-10. [Waveform Compression](#waveform-compression)
-11. [Steady-State Detection](#steady-state-detection)
-12. [Memory and Performance](#memory-and-performance)
-13. [Sweep Directive Errors](#sweep-directive-errors)
-14. [Blank Bode Plot After .FRA](#blank-bode-plot-after-fra)
+2. [Convergence](#convergence)
+   - [Symptoms of Convergence Failure](#symptoms-of-convergence-failure)
+   - [Common Sources of Convergence Failure](#common-sources-of-convergence-failure)
+   - [Debugging with Convergence Reports](#debugging-with-convergence-reports)
+   - [Fix the Circuit](#fix-the-circuit)
+   - [Improve DC Operating Point Convergence](#improve-dc-operating-point-convergence)
+   - [Improve Transient Convergence](#improve-transient-convergence)
+3. [Integration Methods](#integration-methods)
+4. [Use Initial Conditions (UIC)](#use-initial-conditions-uic)
+5. [Waveform Compression](#waveform-compression)
+6. [Steady-State Detection](#steady-state-detection)
+7. [Memory and Performance](#memory-and-performance)
+8. [Sweep Directive Errors](#sweep-directive-errors)
+9. [Blank Bode Plot After .FRA](#blank-bode-plot-after-fra)
 
 ---
 
@@ -70,9 +71,11 @@ When troubleshooting LTspice issues (especially [FRA](#blank-bode-plot-after-fra
 
 ---
 
-## Convergence Problems — Symptoms
+## Convergence
 
-### Simulation Stops with Errors
+### Symptoms of Convergence Failure
+
+#### Simulation Stops with Errors
 
 | Error Message | Meaning |
 |---------------|---------|
@@ -87,15 +90,18 @@ Convergence Failure: Time step too small; time = 1.0005e-06, timestep = 1.25e-19
 Simulation Failed: Iteration limit reached
 ```
 
-### Simulation Runs but is Slow
+#### Simulation Runs but is Slow
 
 - Very small time steps / slow transient speed
 - Very slow pseudo-transient while finding operating point
 - Borderline circuits may converge or fail depending on minor changes
 
----
+These are symptoms of a *convergence* problem — the remedies are in the sections below. If instead
+the simulation is healthy and simply takes longer than you want, see
+[Speeding Up Simulations](FAQ-AND-TIPS.md#speeding-up-simulations), which collects the run-time
+measures documented across this reference.
 
-## Common Sources of Convergence Failure
+### Common Sources of Convergence Failure
 
 1. **Discontinuities in I-V curve** — abrupt changes in device behavior
 2. **Instantaneous changes** — zero rise/fall times
@@ -103,9 +109,7 @@ Simulation Failed: Iteration limit reached
 4. **Extremely high-impedance nodes** — nodes with zero capacitance to ground
 5. **Immediate local feedback** — behavioral sources feeding back instantaneously
 
----
-
-## Debugging with Convergence Reports
+### Debugging with Convergence Reports
 
 Enable convergence reporting to identify problem devices and nodes:
 
@@ -118,7 +122,7 @@ Or add as a simulator option:
 .options debugtran
 ```
 
-### Reading the Report
+#### Reading the Report
 
 The report assigns difficulty scores to devices and nodes:
 
@@ -139,20 +143,18 @@ Node Convergence Difficulty Score:
 
 **Note**: Enabling convergence reports slows the simulation.
 
----
-
-## Fix the Circuit
+### Fix the Circuit
 
 These circuit-level changes resolve most convergence problems:
 
-### 1. Add Capacitance to High-Impedance Nodes
+#### 1. Add Capacitance to High-Impedance Nodes
 
 Even tiny capacitance (1f to 1p) helps the simulator:
 ```spice
 C_fix high_z_node 0 1f
 ```
 
-### 2. Avoid Discontinuities
+#### 2. Avoid Discontinuities
 
 **Ideal diodes**: Add/increase the `epsilon` parameter or increase `Ron`:
 ```spice
@@ -166,12 +168,12 @@ A1 in 0 0 0 0 out 0 0 BUF Trise=10n
 
 **Avoid extreme non-physical values** (e.g., diode emission coefficient n=0.001).
 
-### 3. Avoid Instantaneous Feedback
+#### 3. Avoid Instantaneous Feedback
 
 - Don't model a capacitor with a behavioral current source — use Nonlinear Capacitor (`Q=` syntax)
 - Don't connect logic gate output directly back to its input without delay
 
-### 4. Add Series Resistance to Signal Sources
+#### 4. Add Series Resistance to Signal Sources
 
 ```spice
 V1 in 0 PULSE(0 5 0 1n 1n 0.5u 1u) Rser=1 Cpar=1p
@@ -179,13 +181,11 @@ V1 in 0 PULSE(0 5 0 1n 1n 0.5u 1u) Rser=1 Cpar=1p
 
 Not recommended for power supplies or when monitoring source current.
 
----
-
-## Improve DC Operating Point Convergence
+### Improve DC Operating Point Convergence
 
 Try these in order (least to most aggressive):
 
-### Circuit Directives
+#### Circuit Directives
 
 | Method | Syntax | Description |
 |--------|--------|-------------|
@@ -193,7 +193,7 @@ Try these in order (least to most aggressive):
 | Initial condition | `.ic V(node)=<val>` | Force initial node voltage |
 | Startup ramp | `.tran 1m startup` | Ramp external sources from zero over first 20u |
 
-### Simulator Options
+#### Simulator Options
 
 | Option | Default | Try | Effect |
 |--------|---------|-----|--------|
@@ -209,11 +209,9 @@ Try these in order (least to most aggressive):
 .ic V(vout)=3.3 V(sw_node)=12
 ```
 
----
+### Improve Transient Convergence
 
-## Improve Transient Convergence
-
-### Simulator Options (listed in recommended order to try)
+#### Simulator Options (listed in recommended order to try)
 
 Increasing the value of these numerical options (except `itl4`) sacrifices accuracy for the sake of convergence.
 
@@ -233,7 +231,7 @@ Increasing the value of these numerical options (except `itl4`) sacrifices accur
 .options method=gear itl4=50 cshunt=1f
 ```
 
-### State Save/Load for Partial Relaxation
+#### State Save/Load for Partial Relaxation
 
 Temporarily loosen tolerances for startup, then reload state and continue with tight tolerances. Only one `.tran` command can be active at a time — comment out the previous one for each run:
 
@@ -246,6 +244,12 @@ Temporarily loosen tolerances for startup, then reload state and continue with t
 ; .options reltol=0.001
 ; .tran 10m loadstate
 ```
+
+`savestate` writes the full solution state of the run to a `.state` file and `loadstate` resumes
+from it. Written as `.tran` options they are the same mechanism as the standalone
+`.savestate`/`.loadstate` directives, and produce interchangeable files — see
+[State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management) for the full syntax,
+including `savestatetime=<time>` to save at a chosen time rather than at the end of the run.
 
 ---
 
@@ -297,34 +301,39 @@ LTspice offers two integration methods (set via `.options method=`):
 
 ## Waveform Compression
 
-LTspice optionally uses lossy compression at runtime to keep `.raw` files manageable.
+LTspice can compress waveform data as it writes the `.raw` file. The compression is **lossy**:
+the saved waveforms keep fewer points than were simulated, so some fidelity is lost. Compression
+is **off by default**, and it is usually best to leave it off.
 
-### Configuration
+### Prefer `.save` or `Tstart` for Disk Space
 
-```spice
-.options plotwinsize=<N>       ; Points per compression window (0=disable)
-.options plotreltol=<val>      ; Relative tolerance (default 0.0025)
-.options plotvntol=<val>       ; Voltage tolerance (default 10u)
-.options plotabstol=<val>      ; Current tolerance (default 1n)
-```
+Compression exists to reduce disk usage. If disk space is a problem, reach for these first — they
+shrink the file without degrading the data that is kept:
 
-### When to Disable Compression
+- **`.save`** to write only the signals you need
+- **`Tstart`** in `.tran` to discard data before the interval of interest
 
-Turn off compression (`plotwinsize=0`) when:
+See [Reducing Data Size](#reducing-data-size).
+
+Compression is particularly harmful when:
 - Using `.four` statements
 - Doing FFT in post-analysis
-- Need exact sample-by-sample data
+- Exact sample-by-sample data is needed
 - Precise `.meas` results are required — `.meas` runs in post processing on the saved
   waveform data, so its accuracy is limited by that data after compression
 
+### Enabling and Disabling
+
+Turn compression on or off in **Tools > Settings > Compression**. To override that setting for one
+schematic, add an `.options` directive to it:
+
 ```spice
-.options plotwinsize=0
+.options plotwinsize=0         ; disable compression for this schematic
 ```
 
-### Important Notes
-
-- To configure settings for a specific schematic, add `.options` directive to schematic
-- Leave disabled (default) for most simulations
+If you do enable it, the tolerances that control how much it discards are listed under
+[Waveform Compression](SIMULATION-COMMANDS-REFERENCE.md#waveform-compression) in the `.OPTIONS`
+reference.
 
 ---
 
@@ -356,12 +365,21 @@ Stop simulation automatically when steady state is reached.
 ### Tips
 
 - Use `.ic` to set initial node voltages and inductor currents to reduce startup time
+- Combine with `savestate` to capture the settled state — `steady` ends the run at steady state
+  and `savestate` defaults to saving on completion, so `.tran 10m steady savestate` stores the
+  settled state without your having to guess a time for it. Later runs `loadstate` instead of
+  repeating the startup. See
+  [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management).
 - Each Mark Start execution clears waveform history (helps limit file size)
 - Required for efficiency calculation reports
 
 ---
 
 ## Memory and Performance
+
+This section covers memory and stored data. For run time, see
+[Speeding Up Simulations](FAQ-AND-TIPS.md#speeding-up-simulations) — in particular `loadstate`,
+which avoids simulating the startup transient rather than merely discarding its data.
 
 ### System Requirements
 
@@ -372,7 +390,8 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
 - All waveform data stored on **disk** during simulation
 - Only plotted traces loaded into RAM
 - No particular file size limit — can handle multi-gigabyte `.raw` files
-- Can turn off marching waveforms to reduce memory during simulation
+- Marching waveforms (plotting while the simulation runs) has a negligible effect on both run time
+  and memory, so turning it off is not worth doing for performance
 
 ### Reducing Data Size
 
@@ -388,7 +407,18 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
    .tran 0 10m 9m    ; only save last 1ms of 10ms simulation
    ```
 
-4. **Enable waveform compression** (default is disabled)
+4. **Skip the startup transient with `loadstate`** — save the state once the circuit has settled,
+   then start later runs from it:
+   ```spice
+   .tran 1m savestate   ; run once
+   .tran 10m loadstate  ; subsequent runs start already settled
+   ```
+   Unlike `Tstart`, which simulates the startup and merely discards the data, this does not
+   simulate it at all — so it saves run time as well as disk. See
+   [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management).
+
+5. **Enable waveform compression** only as a last resort — it is lossy and off by default. See
+   [Waveform Compression](#waveform-compression).
 
 ### Emergency: Running Out of Disk Space
 

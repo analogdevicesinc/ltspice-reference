@@ -876,7 +876,7 @@ Because `;§pnba` is introduced by `;`, it is an ordinary comment and is ignored
 **Symbols**: FRA
 
 ```spice
-@xxx in out [zm] fstart=<val> fend=<val> [delay=<val>] [oct=<val>] [fcoarse=<val>]
+@xxx out in [zm] fstart=<val> fend=<val> [delay=<val>] [oct=<val>] [fcoarse=<val>]
 + [nmax=<val>] [[pp0=<val>] [[pp1=<val>] [f0=<val> f1=<val>]]] [tavgmin=<val>]
 + [tsettle=<val>] [rpar=<val>] [flist=<values>] [acmag=<val>] [acphase=<val>]
 + [refnode=<netname>] [intnode=<netname>]

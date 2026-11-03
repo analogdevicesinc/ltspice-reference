@@ -1,7 +1,7 @@
 ---
 title: LTspice Simulation Commands Reference
 description: Dot commands (.tran, .ac, .dc, .meas, .step, .options, and more) — complete reference for all simulation directives.
-version: "24+"
+version: "26+"
 ---
 
 [← AI Reference](README.md)
@@ -43,6 +43,8 @@ Complete reference for all dot commands (simulation directives) in LTspice.
    - [.GLOBAL — Global Nodes](#global--global-nodes)
    - [.END — End of Netlist](#end--end-of-netlist)
 6. [State Management](#state-management)
+   - [Changing the Circuit Between Save and Load](#changing-the-circuit-between-save-and-load)
+   - [Standalone Directives vs. Analysis Options](#standalone-directives-vs-analysis-options)
    - [.SAVESTATE — Save Circuit State](#savestate--save-circuit-state)
    - [.LOADSTATE — Load Circuit State](#loadstate--load-circuit-state)
    - [.SAVEBIAS — Save Operating Point](#savebias--save-operating-point)
@@ -82,7 +84,7 @@ Simulates circuit behavior over time when powered up.
 | step | Compute step response |
 | convreport | Add convergence scores to log |
 
-**State file options**: `loadstate[=<file>]`, `savestate[=<file>]`, `savestatetime=<time>`
+**State file options**: `loadstate[="<file>"]`, `savestate[="<file>"]`, `savestatetime=<time>` — the file name must be enclosed in double quotes; the same mechanism as the standalone `.savestate`/`.loadstate` directives; see [State Management](#state-management).
 
 **Examples**:
 ```spice
@@ -222,10 +224,10 @@ Time-domain frequency response analysis for feedback loops (e.g., SMPS stability
 
 ```spice
 .fra [Tstart=<val>] [dTmax=<val>] [Tstep=<val>] [Tstop=<val>]
-+ [uic] [startup] [loadstate[=<file>]] [savestate[=<file>]]
++ [uic] [startup] [loadstate[="<file>"]] [savestate[="<file>"]] [savestatetime=<time>]
 ```
 
-All parameters optional, specified by keyword. FRA automatically stops when all FRA devices complete analysis.
+All parameters optional, specified by keyword. FRA automatically stops when all FRA devices complete analysis. The state file options are identical to `.tran`'s, and the state files are interchangeable between the two analyses — see [State Management](#state-management).
 
 **Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)** rather than configuring the analysis from scratch. A valid measurement depends on device settings that have to be established in order — a `delay` long enough to reach steady state, a stimulus amplitude that does not disturb the operating point, and adequate settling and averaging time at each frequency. Misset, they yield a plausible-looking Bode plot that is simply wrong.
 
@@ -348,7 +350,7 @@ change a measurement. The script file may be an ordinary netlist — everything 
 directly.
 
 **Accuracy caveat**: because `.meas` reads the saved waveform data, its accuracy is
-limited by that data *after* compression. Disable or loosen compression
+limited by that data *after* compression. Disable compression
 (`.options plotwinsize=0`) for more precise `.meas` output — see
 [Waveform Compression](#waveform-compression).
 
@@ -713,14 +715,72 @@ All lines after `.end` are ignored. Can be omitted. Do not place on schematics (
 
 ## State Management
 
+`.savestate` writes the complete solution state of a transient run — node voltages, inductor
+currents and internal device state — to a proprietary binary `.state` file. `.loadstate`
+restores it, so a later run resumes from that state instead of starting from a DC operating
+point. What this buys you:
+
+- **Skip a long startup transient on repeated runs.** Save the state once the circuit has
+  settled, then `loadstate` for each subsequent experiment rather than re-simulating the
+  ramp-up every time.
+- **Start an `.fra` sweep from an already-settled state** saved by an earlier `.tran` run,
+  instead of waiting through startup inside the FRA run itself.
+- **Get past a difficult startup with relaxed tolerances**, then continue the run with tight
+  ones — see
+  [State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).
+- **Resume from a healthy point after a convergence failure**, as an alternative to `uic`.
+
+### Changing the Circuit Between Save and Load
+
+The circuit does not have to be left untouched. **Parameter and component values may be changed
+after the state was saved** — a different capacitor, a retuned compensation network, a swept
+`.param` — and `loadstate` will still attempt to converge from the saved state. It often succeeds,
+because a state settled for the original circuit is usually a good starting guess for the modified
+one.
+
+This is what makes the technique worthwhile for iterative work: settle the circuit once, then
+explore values from that state instead of re-simulating the startup transient for every variation.
+
+Two kinds of change do break a saved state, and they fail differently:
+
+- **Wiring changes make the state file incompatible**, and LTspice reports an error accordingly.
+  Any change to the topology — adding or removing a component or a connection — needs a freshly
+  saved state; there is no partial reuse.
+- **A value change large enough to move the operating point may fail to converge** when the state
+  is loaded. Changing the voltage on a control pin, for instance, can shift the circuit's operating
+  point far enough that the saved state is no longer a usable starting guess. Re-save the state for
+  the modified circuit.
+
+### Standalone Directives vs. Analysis Options
+
+`savestate`, `loadstate` and `savestatetime` written as options on
+[`.tran`](#tran--transient-analysis) or [`.fra`](#fra--frequency-response-analysis) use the
+same underlying mechanism as the standalone `.savestate` / `.loadstate` directives. State
+files produced by either form are identical and fully interchangeable, including between
+`.tran` and `.fra` runs. Only the keyword spelling differs:
+
+| Standalone directive | Equivalent option on `.tran` / `.fra` |
+|----------------------|---------------------------------------|
+| `.savestate "<filename>"` | `savestate="<file>"` |
+| `.savestate time=<value>` | `savestatetime=<time>` |
+| `.loadstate "<filename>"` | `loadstate="<file>"` |
+
+In both forms the file name must be enclosed in double quotes. `.tran` and `.fra` accept exactly
+the same state syntax as each other. `reset` is the one exception
+to the mapping: it has **no option form**, and is available only on the standalone `.loadstate`
+directive.
+
+---
+
 ### .SAVESTATE — Save Circuit State
 
 Saves complete transient simulation state in proprietary format.
 
 ```spice
-.savestate [<filename>] [time=<value>]
+.savestate ["<filename>"] [time=<value>]
 ```
 
+- The file name must be enclosed in double quotes, e.g. `.savestate "settled.state"`
 - Default filename: schematic base name with `.state` extension
 - Default time: saves final state on completion
 - Multiple .savestate allowed in one simulation
@@ -732,11 +792,14 @@ Saves complete transient simulation state in proprietary format.
 Restores previously saved state to resume simulation.
 
 ```spice
-.loadstate [<filename>] [reset]
+.loadstate ["<filename>"] [reset]
 ```
 
+- The file name must be enclosed in double quotes, e.g. `.loadstate "settled.state"`
 - `reset`: Plot output starting at time zero
-- Circuit must be identical to when state was saved
+- The state must be loaded into the same circuit it was saved from — but component and parameter
+  *values* may differ, see
+  [Changing the Circuit Between Save and Load](#changing-the-circuit-between-save-and-load)
 
 ---
 
