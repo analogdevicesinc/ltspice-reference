@@ -502,19 +502,30 @@ Unlike the sweep errors above, a blank Bode plot usually means the run **succeed
 The results are in `<circuit>.fra_<fra_instance_name>.raw`; only the automatic trace
 selection declined to pick anything.
 
-LTspice auto-plots a trace in just two configurations, and every other combination of
-grounded FRA terminal and probe count leaves the plot blank. Check the `@` device's
-terminals and the number of `&` probes against the
-[auto-plot table](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer), then add
-what you need by hand with **View > Add Trace** (A) — the FRA device's own trace, or
-`probe_<fraprobe_instance_name>` for a probe.
+The plot opens blank when the FRA device has FRA probes (`&`), none of them is marked
+`loopgain`, and LTspice cannot tell which trace to show: neither FRA terminal is grounded,
+or one is grounded, there are several probes and the sweep is fully specified (otherwise
+that combination is an error). The fix is to mark the probe that measures the loop `loopgain` — in the
+probe's dialog, **Use this Probe for Automatic Loop Gain Analysis** — which also moves the
+crossover and margin measurement there. Or add traces by hand with **View > Add Trace**
+(A): the FRA device's own trace, or `probe_<fraprobe_instance_name>` for a probe. See the
+[measurement point table](CIRCUIT-ELEMENTS-REFERENCE.md#results-and-bode-plot) for every
+combination.
+
+With `nobode` there is no Bode plot, and no `.fra` raw file: the crossover frequency and
+phase margin are only in the log.
 
 **The other FRA failure mode looks nothing like this.** A Bode plot that appears complete
-and plausible can still be wrong — when `delay`, stimulus amplitude, `tsettle`, or
-`tavgmin` are misset, or when the FRA device does not interrupt every feedback path.
-Nothing reports it. Work through
-[SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra) in order rather than trusting
-the first plot that appears.
+and plausible can still be wrong. The usual causes are an analysis that started before the
+circuit had settled (steady-state detection fired too early, or `delay` was too early) and
+an FRA device that does not interrupt every feedback path. A stimulus amplitude, `tsettle`
+or `tavgmin` set by hand can also be wrong; left out, LTspice chooses them. The log warns
+about some of these, not all. Follow
+[SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra) — read the log
+([Step 4](FAQ-AND-TIPS.md#step-4-check-the-log)) and check in the waveform that the output
+had settled before the stimulus started
+([Step 5](FAQ-AND-TIPS.md#step-5-check-steady-state-in-the-waveform)) — rather than
+trusting the first plot that appears.
 
 ---
 

@@ -227,22 +227,33 @@ Time-domain frequency response analysis for feedback loops (e.g., SMPS stability
 + [uic] [startup] [loadstate[="<file>"]] [savestate[="<file>"]] [savestatetime=<time>]
 ```
 
-All parameters optional, specified by keyword. FRA automatically stops when all FRA devices complete analysis. The state file options are identical to `.tran`'s, and the state files are interchangeable between the two analyses — see [State Management](#state-management).
+All parameters optional, specified by keyword (`Tstop=2m`); none of `.tran`'s positional values carry over. **`Tstop` is the maximum time to wait for steady state** before the analysis starts; without it the limit is 5 ms. It applies only to that wait, the settling simulation, and does not interrupt the frequency response analysis itself: the run stops when every FRA device has completed its analysis. An FRA device whose `delay` is later than `Tstop` analyzes nothing. Keep `startup` (and `uic`) when converting a `.tran`.
 
-**Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)** rather than configuring the analysis from scratch. A valid measurement depends on device settings that have to be established in order — a `delay` long enough to reach steady state, a stimulus amplitude that does not disturb the operating point, and adequate settling and averaging time at each frequency. Misset, they yield a plausible-looking Bode plot that is simply wrong.
+The state file options are identical to `.tran`'s, and the state files are interchangeable between the two analyses — see [State Management](#state-management). With no `savestatetime`, `.fra savestate` saves the settled state, just before the first stimulus; later `.fra loadstate` runs start from it instead of repeating the start-up.
+
+**Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)**: start with an FRA device that has no parameters, then check the log and that the circuit had settled before the analysis started. The FRA device's other parameters are rarely needed. A plausible-looking Bode plot can still be wrong — most often because the analysis started before the circuit had settled, or because the FRA device does not interrupt every feedback path.
 
 **Measurements on FRA data**: an `.fra` run *is* a transient run — its `.raw` file reports
 `Transient Analysis` with `time` as the x-axis — so `.meas TRAN` statements placed in the
 circuit work directly, alongside the frequency-response results. No separate `.tran`
 simulation is needed to get ripple, overshoot, or average figures out of the same run.
 
-Window the measurement, though. With no range given it spans the whole FRA sweep, which is
-dominated by the stimulus the FRA device injects; use `FROM`/`TO` (or `TRIG`/`TARG`) to
-restrict it. The interval before the device's `delay` is still unperturbed.
+Window the measurement, though. `.meas` is evaluated on the main `.raw` file, which holds the
+start-up and then at most one stimulus, not the whole sweep (see
+[Results](CIRCUIT-ELEMENTS-REFERENCE.md#results)). With no range given, a measurement spans
+that file from t = 0, so the start-up usually dominates it: on `fra_eg2_LT8609S` with an FRA
+device that has no parameters, `PP V(out)` is 3.1 V with no range, against 6.8 mV of ripple
+in the 10 µs before the stimulus. Use `FROM`/`TO` (or `TRIG`/`TARG`) to restrict it. The
+circuit is unperturbed until the stimulus starts. The log gives that time, and the span of
+the stimulus (`FRA - the .raw file shows @1's tone of 93806.6 Hz from 0.00010653 to
+0.000270171 seconds, one of the frequencies it measured.`); with `nobode`, see
+[SMPS Bode Plots, Step 5](FAQ-AND-TIPS.md#step-5-check-steady-state-in-the-waveform). A range that ends
+past the end of the file is cut short, with a warning; one that starts past it fails, as a
+window on the stimulus does with `nobode`, whose file ends at steady state.
 
 ```spice
-.meas TRAN vout_pp   PP V(out)                 ; whole sweep — includes FRA stimulus
-.meas TRAN quiescent PP V(out) FROM 0 TO 100u  ; before delay=100u — stimulus not yet applied
+.meas TRAN vout_pp PP V(out)                  ; no range: from t=0, start-up included
+.meas TRAN ripple  PP V(out) FROM 96u TO 106u ; the 10 µs before steady state at 106.5 µs
 ```
 
 **`.meas AC` does not work on FRA results.** Every `.meas` statement in an FRA circuit is
@@ -723,8 +734,10 @@ point. What this buys you:
 - **Skip a long startup transient on repeated runs.** Save the state once the circuit has
   settled, then `loadstate` for each subsequent experiment rather than re-simulating the
   ramp-up every time.
-- **Start an `.fra` sweep from an already-settled state** saved by an earlier `.tran` run,
-  instead of waiting through startup inside the FRA run itself.
+- **Start repeated `.fra` runs from an already-settled state**, saved by the first `.fra` run
+  (`.fra savestate` saves the settled state, before the first stimulus), instead of waiting
+  through startup in every run. A state saved by a `.tran` of the circuit *before* the FRA
+  device was inserted does not load: inserting it is a wiring change.
 - **Get past a difficult startup with relaxed tolerances**, then continue the run with tight
   ones — see
   [State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).

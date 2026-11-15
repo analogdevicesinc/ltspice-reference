@@ -876,100 +876,201 @@ Because `;§pnba` is introduced by `;`, it is an ordinary comment and is ignored
 **Symbols**: FRA
 
 ```spice
-@xxx out in [zm] fstart=<val> fend=<val> [delay=<val>] [oct=<val>] [fcoarse=<val>]
-+ [nmax=<val>] [[pp0=<val>] [[pp1=<val>] [f0=<val> f1=<val>]]] [tavgmin=<val>]
-+ [tsettle=<val>] [rpar=<val>] [flist=<values>] [acmag=<val>] [acphase=<val>]
-+ [refnode=<netname>] [intnode=<netname>]
+@xxx out in [zm] [nobode] [delay=<val>] [fstart=<val>] [fend=<val>]
++ [oct=<val> | dec=<val>] [fcoarse=<val>] [flist=<values>]
++ [pp0=<val> [pp1=<val> f0=<val> f1=<val>]] [pp=<values>] [tavgmin=<val>] [tsettle=<val>]
++ [rpar=<val>] [refnode=<netname>] [intnode=<netname>] [acmag=<val>] [acphase=<val>] [enabled=<0|1>]
 ```
 
-During a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the analyzer applies a range of sinusoidal stimuli and measures the circuit response. Used to analyze loop gain versus frequency or impedance versus frequency. For a step-by-step procedure using this device, see [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra).
+During a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the analyzer applies sinusoidal stimuli and measures the circuit response. Used to analyze loop gain versus frequency or impedance versus frequency. For a step-by-step procedure using this device, see [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra).
 
 **Analysis mode**:
 
-- Default — **gain analysis**: applies voltage stimuli and analyzes the absolute voltage at each terminal.
-- With the `zm` keyword — **impedance analysis**: applies current stimuli and analyzes the voltage *across* the terminals.
+- Default — **gain analysis**: applies a voltage stimulus between the terminals and analyzes the absolute voltage at each terminal.
+- With the `zm` keyword — **impedance analysis**: applies a current stimulus and analyzes the voltage *across* the terminals.
 
-**Example**:
-```spice
-@1 A B delay=1m fstart=1k fend=500k oct=1 fcoarse=10k nmax=1 pp0=2m pp1=1m f0=1k f1=2k tavgmin=100u tsettle=200u
+**Terminals**: `out` is the first node (symbol pin OUT, the flat side) and `in` the second (pin IN, the pointy side). For gain, `out` goes on the low-impedance side of the loop break (typically the converter output) and `in` on the high-impedance side (the feedback divider or error-amplifier input). For output impedance, `out` goes to the converter output and `in` to ground.
+
+**Examples**:
+
+| Device line | What it does |
+|-------------|--------------|
+| `@1 OUT FB` | Loop gain, configured automatically: crossover frequency, phase margin, gain margin and a Bode plot |
+| `@1 OUT FB nobode` | Crossover frequency and phase margin only, no Bode plot; takes less time |
+| `@1 OUT FB fstart=1k fend=200k` | Configured automatically, within the given frequency range |
+| `@1 OUT FB delay=1m fstart=1k fend=500k oct=2 pp0=20m pp1=5m f0=10k f1=40k tavgmin=100u tsettle=200u` | Every setting given: the sweep is applied exactly as specified |
+| `@z1 OUT 0 zm pp=100m` | Output impedance, 100 mA peak-to-peak stimulus |
+
+### Automatic Configuration
+
+**Every parameter is optional**, with two exceptions: impedance (`zm`) needs a stimulus amplitude (see [Impedance Analysis](#impedance-analysis-zm)), and a single frequency (`fstart` = `fend`) needs an amplitude and `tsettle`. LTspice sets each parameter that is left out from the circuit itself: it detects steady state, measures the switching frequency, finds the crossover frequency, and chooses the frequencies, stimulus amplitudes, and settling and averaging times. A parameter that is given is used as given, and the rest are chosen around it.
+
+**Start from a bare device line** (`@1 OUT FB` with a plain `.fra`) and add parameters only to constrain the result — a start time (`delay`), a frequency range. The example schematics in **Educational\FRA\** do the same: their FRA devices give no parameters beyond what the measurement needs, which is `zm` and a stimulus amplitude for output impedance, and a `delay` where steady-state detection needs help.
+
+How a device is measured depends on what its line gives and on the circuit:
+
+| Device line gives | Circuit | Measured by |
+|-------------------|---------|-------------|
+| A resolution (`oct` or `dec`, or `fstart` = `fend`), an amplitude (`pp` or `pp0`…), and `tsettle` | Switching | The sweep exactly as specified. Any of `delay`, `fstart`, `fend`, `tavgmin` left out is set automatically |
+| Anything less | Switching | The automatic sweep |
+| Anything except all of `delay`, `fstart`, `fend`, `oct` or `dec`, an amplitude, `tsettle` and `tavgmin` | Does not switch | Small-signal AC at the steady-state operating point — see [Circuits That Do Not Switch](#circuits-that-do-not-switch) |
+| All of `delay`, `fstart`, `fend`, `oct` or `dec`, an amplitude, `tsettle` and `tavgmin` | Does not switch | The time-domain sweep exactly as specified |
+
+### Results
+
+- **Default**: a Bode plot, with the crossover frequency (f0dB), phase margin and gain margin shown on it. In the GUI, Ctrl+L in the Bode plot opens the SPICE error log.
+- **`nobode`**: only f0dB and the phase margin are measured, which takes less time. There is no Bode plot and no `.fra` raw file; the GUI opens the log when the run ends. `nobode` is an error together with `oct`, `dec` or `flist`, and with `zm`.
+
+The log reports the results. Read it with `get_spice_log` when driving LTspice through MCP:
+
 ```
+FRA @1: f0dB = 94452.6 Hz, phase margin = 63.628 deg, slope -20.61 dB/decade
+FRA Instance @1: F(0dB) = 94.249 kHz, Phase Margin = 63.8 degrees, Gain Margin = 13.2 dB at 261.651 kHz
+```
+
+The `FRA Instance` line holds the figures shown on the Bode plot. The automatic sweep also logs its own crossover measurement, the `FRA @1: f0dB = …` line — the only result with `nobode`. The two can differ slightly. A non-switching circuit logs `FRA @1: 94 frequencies analyzed, 1 Hz to 1e+09 Hz, starting at t = … seconds.` before its `FRA Instance` line, and an `FRA @1: f0dB = …` line only with `nobode`. Any message starting `Error:` or `Warning:` should be read before trusting a result. So should `FRA @1: the loop gain could not be measured: …` (or `the impedance`), which has neither prefix: that device has no result.
+
+The Bode data is in `<circuit>.fra_<instance>.raw`, where `<instance>` is the device name without `@` (`fra_1` for `@1`). Signals: `gain_<instance>` (or `impedance_<instance>` with `zm`), `V(stimulus_<instance>)` (or `I(stimulus_<instance>)`), `gain_<instance>_<intnode>` with `intnode`, and `probe_<probe name>` per probe.
+
+The main `.raw` file holds the time-domain simulation, not the whole sweep: the start-up to steady state, then at most one stimulus.
+
+| Run | Stimulus in the main `.raw` |
+|-----|-----------------------------|
+| Loop gain, automatic, with a Bode plot | One, near f0dB: of the frequencies LTspice used to find the crossover, the one nearest it |
+| `zm`, automatic | One, near the middle of the frequency range |
+| Single frequency (`fstart` = `fend`) | That frequency |
+| `nobode`; a fully specified sweep of several frequencies; `delay=0` | None: the file ends at steady state |
+| A circuit measured by small-signal AC | None: a single point |
+
+The log names the stimulus, for example `FRA - the .raw file shows @1's tone of 93806.6 Hz from 0.00010653 to 0.000270171 seconds, one of the frequencies it measured.` With several FRA devices, only the first one's stimulus is included. A single-frequency sweep is the way to inspect a chosen stimulus in the time domain.
+
+### When the Analysis Starts
+
+**With no `delay`**, the analysis starts once LTspice detects steady state. Detection works in most circuits: those using an ADI product model that supports steady-state detection, other switching circuits, and circuits that do not switch. The one exception is a circuit whose independent sources repeat at different frequencies — two clocks, or a clock and a repeating load pulse at another frequency — without such an ADI model. That is an error; give a `delay`.
+
+**`.fra` `Tstop` is the maximum time to wait for steady state.** Without it, the limit is 5 ms, counted from the end of any one-off change in the sources, such as a start-up ramp. If the circuit has not settled by then, it is an error (`Error: FRA @1 did not reach steady state …, so the analysis was not started.`), and nothing is analyzed: give a `delay` after the circuit settles, or a longer `Tstop`.
+
+`Tstop` applies only to the settling simulation, the time before the analysis starts. It does not interrupt the frequency response analysis itself: once that has started, every frequency runs to completion. A device whose `delay` is later than `Tstop` analyzes nothing, with a warning (`Warning: no frequencies of FRA instance @1 were analysed …`); any other FRA devices are measured as usual.
+
+**With a `delay`**, the analysis starts at that time. With a supporting ADI model, LTspice warns if steady state has not been detected by then (`Warning: FRA @1: the analysis started at its delay of … seconds, but the circuit had not reached steady state by then …`); a non-switching circuit that is not static at its `delay` is an error. Other switching circuits are not checked: confirm in the waveform that the circuit had settled. `delay=0` starts at the operating point. `delay` is absolute simulation time from t=0, also when the run starts from a `loadstate` file; see [SMPS Bode Plots, Step 3](FAQ-AND-TIPS.md#step-3-run-the-automatic-fra).
+
+**A source that changes during the analysis is warned of**, one line per source: for example a load step `PULSE` that falls inside the sweep. The frequencies measured across the change may be wrong. Periodic sources (a clock, a repeating PWL) are part of the steady state and are not warned of. Move the change outside the analysis, or set `delay` after it.
+
+### Circuits That Do Not Switch
+
+A circuit that does not switch — an op-amp loop, a linear regulator — is measured with small-signal AC analysis once it is at steady state, gain and `zm` alike. This is much faster than a time-domain sweep. The stimulus amplitude, `tsettle`, `tavgmin` and `fcoarse` are not used (the log lists any that were given). Default frequencies: 1 Hz to 1 GHz, 10 per decade; `fstart`, `fend`, `oct` or `dec`, and `flist` apply as given.
+
+The AC analysis is made at the steady-state operating point, so for a circuit with no `delay` and no initial conditions it runs straight from the DC operating point, and the main `.raw` has no transient to show.
+
+To measure such a circuit with a time-domain sweep instead — for example, to see large-signal effects — give all of `delay`, `fstart`, `fend`, `oct` or `dec`, an amplitude, `tsettle` and `tavgmin`.
+
+### Impedance Analysis (zm)
+
+- **The stimulus amplitude is required** for a switching circuit: `pp`, or `pp0` (with `pp1`, `f0`, `f1` to vary it with frequency), in amps peak-to-peak.
+- Default range: `fstart` = fsw/1000 to `fend` = 10 × fsw, where fsw is the measured switching frequency.
+- `nobode` and [FRA probes](#--frequency-response-analysis-probe) (`&`) cannot be used with `zm`; both are errors.
+- The feedback loop stays closed. Remove or disable (`enabled=0`) any gain FRA device in the loop.
+
+**Output impedance setup**: connect `out` to the converter output and `in` to ground. Load the output with **50 % of the expected maximum load current**, and set the stimulus amplitude to **10 % of the expected maximum load current**. For a converter rated for 2 A:
+
+```spice
+I1 OUT 0 1 load       ; 50 % of the 2 A maximum
+@z1 OUT 0 zm pp=200m  ; 10 % of the 2 A maximum
+.fra
+```
+
+Example schematic: `fra_eg7_LT8618_zout.asc` in **Educational\FRA\**.
 
 ### Analysis Frequencies
 
-Frequency is stepped from `fstart` to `fend` at a resolution set by `oct`, the number of points per octave — `oct=1` doubles the stimulus frequency at every step.
-
-`fcoarse` forces coarse stepping (*maximum* one point per octave, `oct<=1`) below the given frequency; the `oct` setting then applies only above it. Setting `fcoarse` to 2–10× `fstart` can greatly reduce simulation time.
-
-`flist` applies a list of specific frequencies individually instead of sweeping.
+- **`fstart`, `fend`** — the lowest and highest frequencies. Defaults for a switching circuit: `fstart` = fsw/1000, or f0dB/10 if that is lower; `fend` = 0.43 × fsw for gain (below half the switching frequency, where a stimulus can no longer be told apart from the switching), 10 × fsw for `zm`.
+- **One frequency**: `fstart` = `fend`. Requires an amplitude and `tsettle`; it is an error without them.
+- **`oct`, `dec`** — points per octave or per decade; giving both is an error. Values of 1 or more are rounded to whole numbers; values below 1 space the points out (`oct=0.5` is one point every two octaves). With neither, LTspice uses about 3 points per decade with more where the response changes quickly. **Leave both out** unless the sweep is to be fully specified (resolution, amplitude and `tsettle`): giving either replaces LTspice's choice of frequencies, including the points it adds where the response changes quickly.
+- **`fcoarse`** — at most one point per octave below `fcoarse`. Setting it to 2–10 × `fstart` can greatly reduce simulation time. Use it with `oct`: the automatic configuration ignores it otherwise.
+- **`flist`** — specific frequencies, added to the sweep.
 
 ### Stimulus Amplitude
 
-Amplitude may be specified by one of three methods:
+Amplitudes are **peak-to-peak**, in volts for gain and amps for `zm`. For gain, LTspice chooses the amplitude when none is given. Otherwise, use one of three methods:
 
 | Method | Behavior |
 |--------|----------|
 | `pp0` alone | Sets one stimulus amplitude across all frequencies. |
-| `pp0`, `pp1`, `f0`, `f1` | Amplitude is `pp0` up to `f0`, `pp1` above `f1`, and logarithmically interpolated between `(f0, pp0)` and `(f1, pp1)`. **Recommended for most circuits.** |
-| `pp` | Piecewise logarithmic amplitude vs. frequency, as space-delimited frequency-voltage pairs. `pp=1k 10m 10k 1m` is equivalent to `f0=1k pp0=10m f1=10k pp1=1m`. |
+| `pp0`, `pp1`, `f0`, `f1` | Amplitude is `pp0` up to `f0`, `pp1` above `f1`, and logarithmically interpolated between `(f0, pp0)` and `(f1, pp1)`. |
+| `pp` | Piecewise logarithmic amplitude vs. frequency, as space-delimited frequency-amplitude pairs. `pp=1k 10m 10k 1m` is equivalent to `f0=1k pp0=10m f1=10k pp1=1m`. A single value sets one amplitude for all frequencies. |
 
-Typically `pp0 > pp1` — a larger stimulus at low frequencies, where high loop gain suppresses the injected perturbation, and a smaller one at high frequencies, where the loop no longer attenuates it and too much drive would disturb the operating point.
+For gain analysis, typically `pp0 > pp1` — a larger stimulus at low frequencies, where high loop gain suppresses the injected perturbation, and a smaller one at high frequencies, where the loop no longer attenuates it and too much drive would disturb the operating point.
 
-### Simultaneous Harmonic Injection
-
-To reduce simulation time, the FRA device may inject a sinusoid and several of its harmonics simultaneously. `nmax` sets the maximum number of overlaid simultaneous sinusoids per stimulus, given either as an integer or as piecewise-logarithmic frequency-value pairs.
-
-**`nmax` defaults to 1 (no harmonic injection), and generally should be left there.** Injecting harmonics alongside the fundamental means any harmonic distortion the circuit itself produces lands on exactly the frequencies being measured, where it cannot be distinguished from the real response. Raise `nmax` above 1 only when you are specifically trying to speed up a simulation whose setup is already known to be good — never while still validating a measurement.
-
-When you do raise it:
-
-- Higher `nmax` reduces simulation time but may reduce accuracy; `nmax=2` is a reasonable first step, and beyond `nmax=4` there is generally little further benefit.
-- LTspice automatically scales the total amplitude to the specified `pp*` value.
-- Compare the result against an `nmax=1` run to confirm the speed-up has not changed the answer.
+A given amplitude is applied exactly, at every frequency. Giving one for gain therefore fixes what the automatic configuration would otherwise choose.
 
 ### Timing
 
-- **`tavgmin`** — minimum time each sinusoid is analyzed. For each applied frequency, if `1/f < tavgmin`, the analysis time is increased in integer period increments until it exceeds `tavgmin`. For an SMPS, a good starting point is `100/fsw`, where `fsw` is the switching frequency.
-- **`tsettle`** — time between a stimulus first being applied and analysis beginning. A good starting point is `2/fcross`, where `fcross` is the approximate expected 0 dB crossover frequency. Defaults to `10/fend`.
-- **`delay`** — time at which the analyzer applies its first stimulus. Set it long enough for the circuit to reach steady state before stimulus begins: measuring during start-up or while the output is still settling perturbs an operating point that is itself still moving, giving a meaningless loop gain. Determine the settling time from the plain `.tran` run of Step 1 in the [SMPS Bode plot procedure](FAQ-AND-TIPS.md#smps-bode-plots-fra) and set `delay` beyond it.
+- **`tsettle`** — time between a stimulus first being applied and analysis beginning. Chosen automatically when left out. Required only for a single frequency (`fstart` = `fend`); otherwise give it only for a fully specified sweep, of which it is one of the three settings. A good starting point is `2/f0dB`.
+- **`tavgmin`** — minimum time each stimulus is analyzed; the analysis time is increased in whole periods of the stimulus until it reaches `tavgmin`. Defaults to 100 switching periods (`100/fsw`), so the switching ripple averages out.
+- **`delay`** — see [When the Analysis Starts](#when-the-analysis-starts).
 
 ### Alternate Measurement Nodes
 
 - **`refnode`** — measures the `in` and `out` node voltages relative to `refnode` instead of ground. This allows FRA to be used on, for example, circuits that regulate current via the voltage across a sense resistor. Not applicable to impedance analysis.
+- **`intnode`** — specifies an intermediate node for an additional gain analysis, useful for analyzing the external compensation point of a regulator. The gain from the FRA device to `intnode` is written to the `.fra` raw file as `gain_<instance>_<intnode>`.
 
-  **The [`&` probe device](#--frequency-response-analysis-probe) is generally preferred over `refnode`.** Both address the same differential-feedback cases, but the probe takes an explicit differential pair at each end (`o+`/`o-` and `i+`/`i-`) instead of redefining the reference for the analyzer's own terminals, and it adds measurement points without altering how the loop is broken.
-- **`intnode`** — specifies an intermediate node for an additional gain analysis, useful for analyzing the external compensation point of a regulator. Gain is calculated from the FRA device to `intnode`, and the complex value is included in the raw output file so it can be plotted in the waveform viewer. To measure gain between arbitrary *differential* point pairs rather than to a single node, use the [`&` probe device](#--frequency-response-analysis-probe).
+**The [FRA probe](#--frequency-response-analysis-probe) (`&`, symbol `fraprobe`) is generally preferred over both**, because its connections state explicitly what it measures. It takes an explicit differential pair at each end, adds measurement points without altering how the loop is broken, and — marked `loopgain` — moves the crossover and margin measurement to where it is placed.
 
 ### Results and Bode Plot
 
-When simulated in the GUI, LTspice opens a Bode plot and may populate it automatically — but only in two configurations, which depend both on the FRA device's terminals and on how many [`&` probes](#--frequency-response-analysis-probe) are in the circuit:
+The crossover frequency and margins are measured at the device's **measurement point**, which is also the trace the Bode plot shows:
 
-| FRA device terminals | `&` probes in circuit | Auto-plotted trace |
-|----------------------|-----------------------|--------------------|
-| Neither grounded | none | one trace per `@` FRA device |
-| One grounded | exactly one | that probe's trace |
-| Neither grounded | one or more | none — blank Bode plot |
-| One grounded | none, or more than one | none — blank Bode plot |
+| FRA device terminals | FRA probes (`&`) of this device | Measurement point and plotted trace |
+|----------------------|---------------------------------|-------------------------------------|
+| Any | One marked `loopgain` | That probe |
+| Neither grounded | None | The FRA device itself (`gain_<instance>`) |
+| One grounded | Exactly one | That probe |
+| Neither grounded | One or more, none `loopgain` | The FRA device itself — but the Bode plot opens blank |
+| One grounded | Several, none `loopgain` | Error with the automatic configuration or a non-switching circuit; blank Bode plot for a fully specified sweep |
+| One grounded (gain) | None, and no `refnode` | Error |
 
-A blank Bode plot does not mean the analysis failed: the results are in the raw output file either way, and the traces can be added manually. Check the FRA device's terminals and the probe count against the table above before looking for a problem in the circuit.
+To be sure the plot and margins come from the intended point, mark that probe `loopgain`. A blank Bode plot does not mean the analysis failed: the results are in the `.fra` raw file and the traces can be added manually (**View > Add Trace**).
+
+### Errors Worth Knowing
+
+These are fatal (`Error:` in the log) rather than silently worked around:
+
+| Condition | Fix |
+|-----------|-----|
+| `oct` and `dec` both given | Give one |
+| `nobode` with `oct`, `dec`, `flist` or `zm` | Remove `nobode`, or the other parameter |
+| `fstart` = `fend` without an amplitude and `tsettle` | Give both, or a wider range |
+| `zm` on a switching circuit with no amplitude | Give `pp` (amps) |
+| A probe of a `zm` device | Remove the probe |
+| Grounded terminal, several probes, none `loopgain` | Mark one probe `loopgain` |
+| Two `loopgain` probes for one device, or `loopgain` on a probe of a disabled device | Mark one probe of an enabled device |
+| No `delay`, no supporting ADI model, sources repeating at different frequencies | Drive the circuit from one clock, or give a `delay` |
+| No `delay`, and the circuit had not settled by the time limit (`.fra` `Tstop`, else 5 ms) | Give a `delay`, or a longer `.fra` `Tstop` |
+| Non-switching circuit not static at its `delay` | Give a later `delay` |
+| Several FRA devices measuring loop gain, a circuit switching at more than one frequency, and fewer supporting ADI models than such devices | Measure one loop at a time, with the other devices disabled (`enabled=0`) |
 
 ### Parameters
 
+fsw is the switching frequency LTspice measures. For non-switching circuits, see [Circuits That Do Not Switch](#circuits-that-do-not-switch).
+
 | Parameter | Description | Units | Default |
 |-----------|-------------|-------|---------|
-| delay | Stimulus start time | sec | 0 |
-| fstart | Frequency sweep start value | Hz | — |
-| fend | Frequency sweep end value | Hz | — |
-| oct | Points per octave for sweep resolution. Supported values: 0.25, 0.5, 1, 2, 3, 4 | — | 4 |
-| fcoarse | Upper frequency for coarse stepping in the sweep | Hz | — |
-| flist | List of specific frequencies (applied individually) | Hz | — |
-| nmax | Maximum number of simultaneously injected harmonic frequencies | — | 1 |
-| pp0 | Stimulus amplitude for frequencies below `f0` (if specified) | V (gain) / A (impedance) | 1mV (gain) / 10mA (impedance) |
-| pp1 | Stimulus amplitude for frequencies above `f1` | V (gain) / A (impedance) | — |
+| zm | Measure impedance instead of gain | — | gain |
+| nobode | Measure only the crossover frequency and phase margin (gain only) | — | Bode plot produced |
+| delay | Stimulus start time | sec | when steady state is detected |
+| fstart | Lowest frequency | Hz | fsw/1000, or f0dB/10 if lower |
+| fend | Highest frequency | Hz | 0.43 × fsw (gain) / 10 × fsw (impedance) |
+| oct | Points per octave | — | automatic |
+| dec | Points per decade | — | automatic |
+| fcoarse | Upper frequency for coarse stepping; use with `oct` | Hz | — |
+| flist | Specific frequencies added to the sweep | Hz | — |
+| pp0 | Stimulus amplitude for frequencies below `f0` (if specified), peak-to-peak | V (gain) / A (impedance) | automatic (gain) / required (impedance) |
+| pp1 | Stimulus amplitude for frequencies above `f1`, peak-to-peak | V (gain) / A (impedance) | — |
 | f0 | Maximum frequency for `pp0` | Hz | — |
 | f1 | Minimum frequency for `pp1` | Hz | — |
-| pp | Piecewise logarithmic amplitude vs. frequency | Hz,V pairs | — |
-| tavgmin | Minimum analysis time for each stimulus frequency | sec | 0 |
-| tsettle | Settling time at each frequency before analysis begins | sec | 10/fend |
+| pp | Piecewise logarithmic amplitude vs. frequency | Hz,V or Hz,A pairs | — |
+| tavgmin | Minimum analysis time for each stimulus frequency | sec | 100/fsw |
+| tsettle | Settling time at each frequency before analysis begins | sec | automatic |
 | rpar | Parallel resistance | Ohm | 1m (gain) / 1T (impedance) |
 | acmag | AC current magnitude (`.ac` simulations only) | A | 0 |
 | acphase | AC current phase (`.ac` simulations only) | degrees | 0 |
@@ -977,6 +1078,7 @@ A blank Bode plot does not mean the analysis failed: the results are in the raw 
 | enabled | Analyzer enable (0 or 1) | — | 1 |
 | refnode | Reference node for voltage gain analysis | — | 0 |
 | intnode | Intermediate node for additional gain analysis | — | — |
+| nmax | Ignored. Present in the example schematics; has no effect | — | — |
 
 ---
 
@@ -985,12 +1087,14 @@ A blank Bode plot does not mean the analysis failed: the results are in the raw 
 **Symbols**: FRAPROBE
 
 ```spice
-&xxx o+ o- i+ i-
+&xxx o+ o- i+ i- [fra=@<instance>] [loopgain]
 ```
 
-Used in conjunction with an [`@` Frequency Response Analyzer](#--frequency-response-analyzer) during a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the probe analyzes gain between any two differential points. It accepts no control parameters — the stimulus is controlled entirely by the FRA device.
+Used in conjunction with an [`@` Frequency Response Analyzer](#--frequency-response-analyzer) during a [`.fra`](SIMULATION-COMMANDS-REFERENCE.md#fra--frequency-response-analysis) simulation, the probe analyzes gain between any two differential points. The stimulus is controlled entirely by the FRA device.
 
-**Result**: the complex quantity `V(o+,o-) / V(i+,i-)` versus frequency, written to the FRA complex raw output file `<circuit>.fra_<fra_instance_name>.raw` as a signal named `probe_<fraprobe_instance_name>`. Whether that signal is plotted automatically depends on the FRA device's terminals and how many probes are present — see [Results and Bode Plot](#results-and-bode-plot).
+**Example**: `&1 FBX 0 FB 0 fra=@1 loopgain` — the loop of `@1`, measured from `FB` to `FBX`, with the crossover and margins taken there.
+
+**Result**: the complex quantity `V(o+,o-) / V(i+,i-)` versus frequency, written to the FRA complex raw output file `<circuit>.fra_<fra_instance_name>.raw` as a signal named `probe_<fraprobe_instance_name>`. Whether that signal is plotted automatically, and whether the margins are measured there, is set by `loopgain` — see [Results and Bode Plot](#results-and-bode-plot).
 
 The differential input and output pairs suit applications such as the following, each with an example schematic in **File > Open Examples > Educational\FRA\**:
 
@@ -999,13 +1103,20 @@ The differential input and output pairs suit applications such as the following,
 - Differential feedback, such as current-feedback circuits — `&1` in the same example, taken differentially across the output current sense resistor
 - Inverting (negative output) SMPS circuits — `fra_eg10_LT8609_inverting_probe.asc`
 
-For differential feedback, prefer this device over the FRA device's [`refnode`](#--frequency-response-analyzer) parameter.
+Prefer this device to the FRA device's [`refnode` and `intnode`](#alternate-measurement-nodes) parameters: the probe's connections state explicitly what it measures.
+
+### Probe Parameters
+
+- **`fra=@<instance>`** — the FRA device the probe belongs to. If left out: the only FRA device in the circuit, else the FRA device of the same name (`&1` with `@1`, `&2` with `@2`, and so on).
+- **`loopgain`** — use this probe for loop gain analysis: the crossover frequency, phase margin and gain margin are measured there, the automatic configuration measures the loop there, and the Bode plot shows it. This applies to a fully specified sweep too. At most one `loopgain` probe per FRA device; the others are measured beside it and appear in the raw file.
+
+In the GUI, right-clicking the probe opens a dialog with both settings: the FRA device, and the checkbox **Use this Probe for Automatic Loop Gain Analysis** for `loopgain`.
 
 ### Multiple Loops and Probes
 
-A circuit with more than one feedback loop can have its loops analyzed simultaneously by configuring a separate FRA device for each independent loop.
+A circuit with more than one feedback loop can have its loops analyzed simultaneously by configuring a separate FRA device for each independent loop. Any number of probes may belong to one FRA device. With several FRA devices, give each probe `fra=` (or name it after its device) so the association is explicit.
 
-Probes may also be used in simulations with multiple FRA devices, but **each probe must be associated with a specific FRA device, and LTspice makes that association by instance name** — `&1` pairs with `@1`, `&2` with `@2`, and so on.
+Probes cannot be used with a `zm` (impedance) device.
 
 **Examples**: in that same directory, any schematic with "probe" in the filename demonstrates the probe device.
 
