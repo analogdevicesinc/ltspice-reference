@@ -145,6 +145,9 @@ These change how much gets simulated, not how accurately.
   [Changing the Circuit Between Save and Load](SIMULATION-COMMANDS-REFERENCE.md#changing-the-circuit-between-save-and-load).
   See also [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management), and
   [Step 3](#step-3-run-the-automatic-fra) for starting repeated `.fra` runs this way.
+- **For an FRA, give a higher `fstart`**: the lowest frequencies take the longest to analyze. Use
+  `nobode` if only the crossover frequency and phase margin are needed. See
+  [Step 3](#step-3-run-the-automatic-fra).
 - **Stop the run when the circuit settles**, using the `steady` modifier rather than guessing a
   `Tstop` and overshooting it. See
   [Steady-State Detection](TROUBLESHOOTING-GUIDE.md#steady-state-detection).
@@ -282,6 +285,8 @@ The `FRA Instance` line holds the figures on the Bode plot. The Bode data is in 
 
 If only the crossover frequency and phase margin are needed, add `nobode` (`@1 OUT FB nobode`). It takes less time; the result is the `FRA @1: f0dB = …` line, there is no Bode plot, and the main `.raw` ends at steady state, with no stimulus.
 
+**To reduce the simulation time, give `fstart` (Minimum Frequency in the FRA device's dialog), or raise it if it is already given.** The lowest frequencies take the longest to analyze. Without `fstart`, a loop gain Bode plot starts at fsw/1000 or 1 kHz, whichever is higher, but no higher than f0dB/10, so that it always reaches a decade below the crossover: min(f0dB/10, max(fsw/1000, 1 kHz)). An impedance (`zm`) sweep, and a fully specified sweep (Step 7), start at fsw/1000. For loop gain, keep `fstart` well below f0dB, for example at f0dB/10 from an earlier run: `@1 OUT FB fstart=10k` for f0dB near 100 kHz. Everything else is still set automatically.
+
 **For later runs, change `savestate` to `loadstate`** (`.fra startup loadstate`). Each run then starts from the settled circuit instead of repeating the start-up; with no `delay`, LTspice detects steady state again from there, which takes far less time. Component values may be changed between runs. Save the state again after any wiring change, or after a change large enough to move the operating point. A `delay` is absolute simulation time from t=0, also after `loadstate`: a state saved at 1.2 ms already satisfies `delay=1m`, so the analysis starts as soon as it loads. See [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management).
 
 #### Step 4: Check the Log
@@ -304,10 +309,10 @@ A Bode plot that opens blank, or margins taken at the wrong point, means the mea
 A clean log does not prove that the analysis started at steady state. Check it in the transient waveform:
 
 1. Find in the log the time the analysis started: the `from` time in `FRA - the .raw file shows @1's tone of … Hz from … to … seconds, …`. With `nobode` there is no such line; use the time in `FRA - steady state reached at … seconds.` (circuits using an ADI model that supports steady-state detection) or in `FRA - switching frequency at … seconds: …` (other switching circuits). A circuit that does not switch logs `FRA @1: … frequencies analyzed, … starting at t = … seconds.`
-2. Read the regulator output voltage from the main `.raw` (`get_raw_info`, then `read_raw_waveforms` or `export_raw_waveforms`). The main `.raw` holds the start-up, then the one stimulus (Step 3).
-3. Up to that time, the output should have finished its start-up: flat apart from the switching ripple, with no soft-start ramp or slow drift still in progress.
+2. Read the output voltage, the inductor current and the compensation voltage, where the model makes it available, from the main `.raw` (`get_raw_info`, then `read_raw_waveforms` or `export_raw_waveforms`). The main `.raw` holds the start-up, then the one stimulus (Step 3).
+3. Up to that time, each should have finished its start-up: steady apart from the switching ripple, with no soft-start ramp or slow drift still in progress.
 
-**If detection fired too early** (the output is still moving at that time) **or not at all** (an `Error:` that steady state was not reached), set `delay` on the FRA device to a time after the output has settled, taken from Step 1 or from this waveform:
+**If detection fired too early** (the output is still moving at that time) **or not at all** (an `Error:` that steady state was not reached), set `delay` on the FRA device (Start Analysis at Time in its dialog) to a time after the circuit has settled, taken from Step 1 or from this waveform, or increase it if it is already set:
 
 ```spice
 @1 OUT FB delay=1m
@@ -359,7 +364,7 @@ These steps measure a converter's closed-loop output impedance, with the `zm` ke
    .fra
    ```
 
-6. **Run, and read the result.** Convert the `.tran` and add `savestate` as in [Step 3](#step-3-run-the-automatic-fra), and use `loadstate` for later runs. The log reports the frequencies measured, for example `FRA @z1: impedance measured at 24 frequencies, 2019.95 Hz to 2.01389e+07 Hz`. By default they run from fsw/1000 to 10 × fsw. The data is `impedance_z1` in `<circuit>.fra_z1.raw`. There is no crossover frequency or margin. The main `.raw` holds the start-up, then one stimulus, near the middle of the frequency range.
+6. **Run, and read the result.** Convert the `.tran` and add `savestate` as in [Step 3](#step-3-run-the-automatic-fra), and use `loadstate` for later runs. The log reports the frequencies measured, for example `FRA @z1: impedance measured at 24 frequencies, 2019.95 Hz to 2.01389e+07 Hz`. By default they run from fsw/1000 to 10 × fsw. A higher `fstart` (Minimum Frequency) reduces the simulation time, since the lowest frequencies take the longest to analyze. The data is `impedance_z1` in `<circuit>.fra_z1.raw`. There is no crossover frequency or margin. The main `.raw` holds the start-up, then one stimulus, near the middle of the frequency range.
 7. **Check the log and steady state**, as in [Step 4](#step-4-check-the-log) and [Step 5](#step-5-check-steady-state-in-the-waveform). If steady-state detection fired too early or too late, set `delay`.
 8. **Only if the result is still wrong for another reason**, change the range with `fstart` and `fend`, or add frequencies with `flist`. Leave `oct` and `dec` out.
 

@@ -231,7 +231,7 @@ All parameters optional, specified by keyword (`Tstop=2m`); none of `.tran`'s po
 
 The state file options are identical to `.tran`'s, and the state files are interchangeable between the two analyses — see [State Management](#state-management). With no `savestatetime`, `.fra savestate` saves the settled state, just before the first stimulus; later `.fra loadstate` runs start from it instead of repeating the start-up.
 
-**Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)**: start with an FRA device that has no parameters, then check the log and that the circuit had settled before the analysis started. The FRA device's other parameters are rarely needed. A plausible-looking Bode plot can still be wrong — most often because the analysis started before the circuit had settled, or because the FRA device does not interrupt every feedback path.
+**Follow the step-by-step procedure in [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra)**: start with an FRA device that has no parameters, then check the log and that the circuit had settled before the analysis started. The FRA device's other parameters are rarely needed. A plausible-looking Bode plot can still be wrong — most often because the analysis started before the circuit had settled, or because the FRA device is not placed correctly.
 
 **Measurements on FRA data**: an `.fra` run *is* a transient run — its `.raw` file reports
 `Transient Analysis` with `time` as the x-axis — so `.meas TRAN` statements placed in the

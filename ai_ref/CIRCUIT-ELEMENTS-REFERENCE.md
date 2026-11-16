@@ -983,7 +983,10 @@ Example schematic: `fra_eg7_LT8618_zout.asc` in **Educational\FRA\**.
 
 ### Analysis Frequencies
 
-- **`fstart`, `fend`** — the lowest and highest frequencies. Defaults for a switching circuit: `fstart` = fsw/1000, or f0dB/10 if that is lower; `fend` = 0.43 × fsw for gain (below half the switching frequency, where a stimulus can no longer be told apart from the switching), 10 × fsw for `zm`.
+- **`fstart`, `fend`** — the lowest and highest frequencies. The lowest frequencies take the longest to analyze, so a higher `fstart` reduces the simulation time. Defaults for a switching circuit:
+  - `fstart` for gain: the higher of fsw/1000 and 1 kHz, but no higher than f0dB/10, so that the Bode plot always reaches a decade below the crossover — min(f0dB/10, max(fsw/1000, 1 kHz)).
+  - `fstart` for `zm`, or for a fully specified sweep: fsw/1000.
+  - `fend`: 0.43 × fsw for gain (below half the switching frequency, where a stimulus can no longer be told apart from the switching), 10 × fsw for `zm`.
 - **One frequency**: `fstart` = `fend`. Requires an amplitude and `tsettle`; it is an error without them.
 - **`oct`, `dec`** — points per octave or per decade; giving both is an error. Values of 1 or more are rounded to whole numbers; values below 1 space the points out (`oct=0.5` is one point every two octaves). With neither, LTspice uses about 3 points per decade with more where the response changes quickly. **Leave both out** unless the sweep is to be fully specified (resolution, amplitude and `tsettle`): giving either replaces LTspice's choice of frequencies, including the points it adds where the response changes quickly.
 - **`fcoarse`** — at most one point per octave below `fcoarse`. Setting it to 2–10 × `fstart` can greatly reduce simulation time. Use it with `oct`: the automatic configuration ignores it otherwise.
@@ -1058,7 +1061,7 @@ fsw is the switching frequency LTspice measures. For non-switching circuits, see
 | zm | Measure impedance instead of gain | — | gain |
 | nobode | Measure only the crossover frequency and phase margin (gain only) | — | Bode plot produced |
 | delay | Stimulus start time | sec | when steady state is detected |
-| fstart | Lowest frequency | Hz | fsw/1000, or f0dB/10 if lower |
+| fstart | Lowest frequency | Hz | the higher of fsw/1000 and 1 kHz, but no higher than f0dB/10 (gain) / fsw/1000 (impedance, or a fully specified sweep) |
 | fend | Highest frequency | Hz | 0.43 × fsw (gain) / 10 × fsw (impedance) |
 | oct | Points per octave | — | automatic |
 | dec | Points per decade | — | automatic |
