@@ -2107,13 +2107,12 @@ The crossover frequency and margins are measured at the device's **measurement p
 | FRA device terminals | FRA probes (`&`) of this device | Measurement point and plotted trace |
 |----------------------|---------------------------------|-------------------------------------|
 | Any | One marked `loopgain` | That probe |
-| Neither grounded | None | The FRA device itself (`gain_<instance>`) |
+| Neither grounded, or a `refnode` given | Any number, none `loopgain` | The FRA device itself (`gain_<instance>`) |
 | One grounded | Exactly one | That probe |
-| Neither grounded | One or more, none `loopgain` | The FRA device itself — but the Bode plot opens blank |
-| One grounded | Several, none `loopgain` | Error with the automatic configuration or a non-switching circuit; blank Bode plot for a fully specified sweep |
+| One grounded | Several, none `loopgain` | None: mark one `loopgain`. An error, except in a fully specified sweep |
 | One grounded (gain) | None, and no `refnode` | Error |
 
-To be sure the plot and margins come from the intended point, mark that probe `loopgain`. A blank Bode plot does not mean the analysis failed: the results are in the `.fra` raw file and the traces can be added manually (**View > Add Trace**).
+To be sure the plot and margins come from the intended point, mark that probe `loopgain`. Every probe's result is in the `.fra` raw file, as `probe_<fraprobe_instance_name>`, and can be added to the plot with **View > Add Trace**.
 
 ### Errors Worth Knowing
 
@@ -3080,7 +3079,7 @@ Diagnosing and fixing convergence failures, performance issues, and common simul
 
 ## Diagnostic Information Collection
 
-When troubleshooting LTspice issues (especially [FRA](#blank-bode-plot-after-fra), convergence, or model-related problems), collect this diagnostic information first:
+When troubleshooting LTspice issues (especially [FRA](#checking-an-fra-result), convergence, or model-related problems), collect this diagnostic information first:
 
 ### 1. LTspice Version
 - Go to **Help → About LTspice**
@@ -3542,33 +3541,16 @@ for the full `.dc` grammar.
 
 ---
 
-## Blank Bode Plot After .FRA
+## Checking an FRA Result
 
-Unlike the sweep errors above, a blank Bode plot usually means the run **succeeded**.
-The results are in `<circuit>.fra_<fra_instance_name>.raw`; only the automatic trace
-selection declined to pick anything.
-
-The plot opens blank when the FRA device has FRA probes (`&`), none of them is marked
-`loopgain`, and LTspice cannot tell which trace to show: neither FRA terminal is grounded,
-or one is grounded, there are several probes and the sweep is fully specified (otherwise
-that combination is an error). The fix is to mark the probe that measures the loop `loopgain` — in the
-probe's dialog, **Use this Probe for Automatic Loop Gain Analysis** — which also moves the
-crossover and margin measurement there. Or add traces by hand with **View > Add Trace**
-(A): the FRA device's own trace, or `probe_<fraprobe_instance_name>` for a probe. See the
-[measurement point table](CIRCUIT-ELEMENTS-REFERENCE.md#results-and-bode-plot) for every
-combination.
-
-With `nobode` there is no Bode plot, and no `.fra` raw file: the crossover frequency and
-phase margin are only in the log.
-
-**The other FRA failure mode looks nothing like this.** A Bode plot that appears complete
-and plausible can still be wrong. The usual causes are an analysis that started before the
-circuit had settled (steady-state detection fired too early, or `delay` was too early) and
-an FRA device that does not interrupt every feedback path. A stimulus amplitude, `tsettle`
+A Bode plot that appears complete and plausible can still be wrong. The usual causes are an
+analysis that started before the circuit had settled (steady-state detection fired too
+early, or `delay` was too early) and an FRA device that is not placed correctly
+([Step 2](FAQ-AND-TIPS.md#step-2-insert-fra-component)). A stimulus amplitude, `tsettle`
 or `tavgmin` set by hand can also be wrong; left out, LTspice chooses them. The log warns
 about some of these, not all. Follow
 [SMPS Bode Plots (FRA)](FAQ-AND-TIPS.md#smps-bode-plots-fra) — read the log
-([Step 4](FAQ-AND-TIPS.md#step-4-check-the-log)) and check in the waveform that the output
+([Step 4](FAQ-AND-TIPS.md#step-4-check-the-log)) and check in the waveform that the circuit
 had settled before the stimulus started
 ([Step 5](FAQ-AND-TIPS.md#step-5-check-steady-state-in-the-waveform)) — rather than
 trusting the first plot that appears.
@@ -6676,7 +6658,7 @@ Read every `Warning:` and `Error:` line before trusting a result, and any line s
 | `Warning: no frequencies of FRA instance @1 were analysed …` | The device's `delay` is later than the `.fra` `Tstop` | Raise `Tstop` past the `delay`, or give an earlier `delay` |
 | `FRA @1: the loop gain could not be measured: no 0 dB crossover was found. …` | The FRA device is not in the loop, or the loop is not closed | Check the placement (Step 2) |
 
-A Bode plot that opens blank, or margins taken at the wrong point, means the measurement point is not the one intended: see [Results and Bode Plot](CIRCUIT-ELEMENTS-REFERENCE.md#results-and-bode-plot), and mark the intended probe `loopgain`.
+Margins taken at the wrong point mean that the measurement point is not the one intended: see [Results and Bode Plot](CIRCUIT-ELEMENTS-REFERENCE.md#results-and-bode-plot), and mark the intended probe `loopgain`.
 
 #### Step 5: Check Steady State in the Waveform
 A clean log does not prove that the analysis started at steady state. Check it in the transient waveform:

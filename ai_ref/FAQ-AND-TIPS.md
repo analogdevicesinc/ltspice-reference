@@ -303,7 +303,7 @@ Read every `Warning:` and `Error:` line before trusting a result, and any line s
 | `Warning: no frequencies of FRA instance @1 were analysed …` | The device's `delay` is later than the `.fra` `Tstop` | Raise `Tstop` past the `delay`, or give an earlier `delay` |
 | `FRA @1: the loop gain could not be measured: no 0 dB crossover was found. …` | The FRA device is not in the loop, or the loop is not closed | Check the placement (Step 2) |
 
-A Bode plot that opens blank, or margins taken at the wrong point, means the measurement point is not the one intended: see [Results and Bode Plot](CIRCUIT-ELEMENTS-REFERENCE.md#results-and-bode-plot), and mark the intended probe `loopgain`.
+Margins taken at the wrong point mean that the measurement point is not the one intended: see [Results and Bode Plot](CIRCUIT-ELEMENTS-REFERENCE.md#results-and-bode-plot), and mark the intended probe `loopgain`.
 
 #### Step 5: Check Steady State in the Waveform
 A clean log does not prove that the analysis started at steady state. Check it in the transient waveform:

@@ -1026,13 +1026,12 @@ The crossover frequency and margins are measured at the device's **measurement p
 | FRA device terminals | FRA probes (`&`) of this device | Measurement point and plotted trace |
 |----------------------|---------------------------------|-------------------------------------|
 | Any | One marked `loopgain` | That probe |
-| Neither grounded | None | The FRA device itself (`gain_<instance>`) |
+| Neither grounded, or a `refnode` given | Any number, none `loopgain` | The FRA device itself (`gain_<instance>`) |
 | One grounded | Exactly one | That probe |
-| Neither grounded | One or more, none `loopgain` | The FRA device itself — but the Bode plot opens blank |
-| One grounded | Several, none `loopgain` | Error with the automatic configuration or a non-switching circuit; blank Bode plot for a fully specified sweep |
+| One grounded | Several, none `loopgain` | None: mark one `loopgain`. An error, except in a fully specified sweep |
 | One grounded (gain) | None, and no `refnode` | Error |
 
-To be sure the plot and margins come from the intended point, mark that probe `loopgain`. A blank Bode plot does not mean the analysis failed: the results are in the `.fra` raw file and the traces can be added manually (**View > Add Trace**).
+To be sure the plot and margins come from the intended point, mark that probe `loopgain`. Every probe's result is in the `.fra` raw file, as `probe_<fraprobe_instance_name>`, and can be added to the plot with **View > Add Trace**.
 
 ### Errors Worth Knowing
 
