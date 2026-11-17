@@ -350,7 +350,7 @@ change a measurement. The script file may be an ordinary netlist — everything 
 directly.
 
 **Accuracy caveat**: because `.meas` reads the saved waveform data, its accuracy is
-limited by that data *after* compression. Disable or loosen compression
+limited by that data *after* compression. Disable compression
 (`.options plotwinsize=0`) for more precise `.meas` output — see
 [Waveform Compression](#waveform-compression).
 

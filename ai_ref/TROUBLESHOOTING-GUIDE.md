@@ -301,34 +301,39 @@ LTspice offers two integration methods (set via `.options method=`):
 
 ## Waveform Compression
 
-LTspice optionally uses lossy compression at runtime to keep `.raw` files manageable.
+LTspice can compress waveform data as it writes the `.raw` file. The compression is **lossy**:
+the saved waveforms keep fewer points than were simulated, so some fidelity is lost. Compression
+is **off by default**, and it is usually best to leave it off.
 
-### Configuration
+### Prefer `.save` or `Tstart` for Disk Space
 
-```spice
-.options plotwinsize=<N>       ; Points per compression window (0=disable)
-.options plotreltol=<val>      ; Relative tolerance (default 0.0025)
-.options plotvntol=<val>       ; Voltage tolerance (default 10u)
-.options plotabstol=<val>      ; Current tolerance (default 1n)
-```
+Compression exists to reduce disk usage. If disk space is a problem, reach for these first — they
+shrink the file without degrading the data that is kept:
 
-### When to Disable Compression
+- **`.save`** to write only the signals you need
+- **`Tstart`** in `.tran` to discard data before the interval of interest
 
-Turn off compression (`plotwinsize=0`) when:
+See [Reducing Data Size](#reducing-data-size).
+
+Compression is particularly harmful when:
 - Using `.four` statements
 - Doing FFT in post-analysis
-- Need exact sample-by-sample data
+- Exact sample-by-sample data is needed
 - Precise `.meas` results are required — `.meas` runs in post processing on the saved
   waveform data, so its accuracy is limited by that data after compression
 
+### Enabling and Disabling
+
+Turn compression on or off in **Tools > Settings > Compression**. To override that setting for one
+schematic, add an `.options` directive to it:
+
 ```spice
-.options plotwinsize=0
+.options plotwinsize=0         ; disable compression for this schematic
 ```
 
-### Important Notes
-
-- To configure settings for a specific schematic, add `.options` directive to schematic
-- Leave disabled (default) for most simulations
+If you do enable it, the tolerances that control how much it discards are listed under
+[Waveform Compression](SIMULATION-COMMANDS-REFERENCE.md#waveform-compression) in the `.OPTIONS`
+reference.
 
 ---
 
@@ -385,6 +390,8 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
 - All waveform data stored on **disk** during simulation
 - Only plotted traces loaded into RAM
 - No particular file size limit — can handle multi-gigabyte `.raw` files
+- Marching waveforms (plotting while the simulation runs) has a negligible effect on both run time
+  and memory, so turning it off is not worth doing for performance
 
 ### Reducing Data Size
 
@@ -400,9 +407,7 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
    .tran 0 10m 9m    ; only save last 1ms of 10ms simulation
    ```
 
-4. **Enable waveform compression** (default is disabled)
-
-5. **Skip the startup transient with `loadstate`** — save the state once the circuit has settled,
+4. **Skip the startup transient with `loadstate`** — save the state once the circuit has settled,
    then start later runs from it:
    ```spice
    .tran 1m savestate   ; run once
@@ -411,6 +416,9 @@ If you can run Windows, you can run LTspice. Significant effort is spent minimiz
    Unlike `Tstart`, which simulates the startup and merely discards the data, this does not
    simulate it at all — so it saves run time as well as disk. See
    [State Management](SIMULATION-COMMANDS-REFERENCE.md#state-management).
+
+5. **Enable waveform compression** only as a last resort — it is lossy and off by default. See
+   [Waveform Compression](#waveform-compression).
 
 ### Emergency: Running Out of Disk Space
 

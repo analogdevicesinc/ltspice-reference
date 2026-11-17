@@ -154,44 +154,31 @@ These change how much gets simulated, not how accurately.
 
 ### Trade accuracy for speed — validate the setup first
 
-Each of these can change the answer. Establish a result you trust, then apply them and confirm the
+These change the simulation results. Establish a result you trust, then apply them and confirm the
 answer did not move.
 
-- **FRA sweeps**: reduce `tsettle` and `tavgmin` where the circuit responds quickly, use `fcoarse`
-  to coarsen the expensive low-frequency end, and only then consider raising `nmax`. See
-  [Step 8: Speed Up](#step-8-speed-up-optional) and
-  [`nmax`](CIRCUIT-ELEMENTS-REFERENCE.md#--frequency-response-analyzer), which puts the circuit's
-  own distortion on the frequencies being measured.
-- **Relaxed `reltol`** gets past a difficult startup quickly. The sound way to use it is to relax
-  tolerance for the startup only, then continue at tight tolerance from a saved state — see
-  [State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).
-- **`method=gear`** cures trap ringing but needs more timesteps for the same accuracy, and can make
-  an unstable circuit appear stable. See
-  [Integration Methods](TROUBLESHOOTING-GUIDE.md#integration-methods).
-- **Waveform compression** is lossy. See
-  [Waveform Compression](TROUBLESHOOTING-GUIDE.md#waveform-compression).
+The cost need not apply to the whole run. `.options` take effect for an entire run, but a run can
+be split into segments with `savestate`/`loadstate`, each with its own tolerances: loose through
+the non-critical or troublesome portions — a startup transient, a settling interval, a
+hard-to-converge transition — and tight through the portions you measure. See
+[State Save/Load for Partial Relaxation](TROUBLESHOOTING-GUIDE.md#state-saveload-for-partial-relaxation).
 
-### Reduce disk and memory rather than run time
+- **Raised `trtol`** lets the simulator take larger time steps by tolerating more truncation error
+  per step. Fast edges, ripple, and ringing are the first details to lose resolution, so compare
+  them against a run at the default value. See
+  [.OPTIONS](SIMULATION-COMMANDS-REFERENCE.md#options--simulator-options).
+- **Relaxed `reltol`** loosens the error criterion every node and branch must meet at each time
+  point, so the run both goes faster and gets through hard-to-converge stretches more easily. The
+  accuracy loss is just as broad, which makes it a candidate for confining to the segments
+  described above rather than setting for the whole run. See
+  [Improve Transient Convergence](TROUBLESHOOTING-GUIDE.md#improve-transient-convergence) for
+  typical values.
 
-Listed so they are not mistaken for run-time savings — the circuit is still simulated in full, only
-less of the result is kept.
+### Not run-time savings
 
-- **`.save`** limits which traces are written
-  ([.SAVE](SIMULATION-COMMANDS-REFERENCE.md#save--limit-saved-data)); unchecking the subcircuit save
-  defaults does the same for internal node voltages and device currents.
-- **`Tstart`** discards data before a given time, but still simulates that time.
-- For both, see [Reducing Data Size](TROUBLESHOOTING-GUIDE.md#reducing-data-size) and
-  [Memory and Performance](TROUBLESHOOTING-GUIDE.md#memory-and-performance).
-
-Turning marching waveforms off is *not* worth doing for performance — its effect on both run time
-and memory is negligible.
-
-### Speeds viewing, not simulating
-
-- **Fast Access conversion** reorganizes a finished `.raw` file so the waveform viewer can plot from
-  it quickly — roughly a factor equal to the number of saved traces. It does not make the
-  simulation any faster, and the conversion itself can take longer than the original run. See
-  [Fast Access File Format](WAVEFORM-VIEWER-GUIDE.md#fast-access-file-format).
+`.save` and `Tstart` shrink the stored data, but the circuit is still simulated in full. Turning
+off marching waveforms makes a negligible difference to both run time and memory. See
+[Memory and Performance](TROUBLESHOOTING-GUIDE.md#memory-and-performance).
 
 ---
 
