@@ -1,7 +1,7 @@
 ---
 title: LTspice Circuit Elements Reference
 description: Component syntax (R, L, C, V, I, D, Q, M, sources, switches) — parameters and models for every circuit element type.
-version: "24+"
+version: "26.2+"
 ---
 
 [← AI Reference](README.md)

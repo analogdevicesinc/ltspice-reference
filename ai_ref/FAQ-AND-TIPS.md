@@ -1,7 +1,7 @@
 ---
 title: LTspice FAQ and Tips
 description: Updates, Linux, simulation speed, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
-version: "26+"
+version: "26.2+"
 ---
 
 [← AI Reference](README.md)
