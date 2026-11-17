@@ -1,7 +1,7 @@
 ---
 title: LTspice .MEASURE SQLite Database Reference
 description: The .MEAS SQLite database schema and how to query measurement results stored in the generated .db file.
-version: "24+"
+version: "26+"
 ---
 
 [← AI Reference](README.md)
