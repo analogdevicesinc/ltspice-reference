@@ -1,6 +1,6 @@
 ---
 title: LTspice FAQ and Tips
-description: Updates, license, Linux, simulation speed, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
+description: Updates, Linux, simulation speed, efficiency calculations, and SMPS Bode plots — frequently asked questions and practical tips.
 version: "26+"
 ---
 
@@ -15,13 +15,12 @@ Frequently asked questions, simulation speed, efficiency calculations, SMPS Bode
 ## Table of Contents
 
 1. [Program Updates](#program-updates)
-2. [License and Distribution](#license-and-distribution)
-3. [Running Under Linux](#running-under-linux)
-4. [Settings Overview](#settings-overview)
-5. [Speeding Up Simulations](#speeding-up-simulations)
-6. [Efficiency Calculation](#efficiency-calculation)
-7. [SMPS Bode Plots (FRA)](#smps-bode-plots-fra)
-8. [Additional Resources](#additional-resources)
+2. [Running Under Linux](#running-under-linux)
+3. [Settings Overview](#settings-overview)
+4. [Speeding Up Simulations](#speeding-up-simulations)
+5. [Efficiency Calculation](#efficiency-calculation)
+6. [SMPS Bode Plots (FRA)](#smps-bode-plots-fra)
+7. [Additional Resources](#additional-resources)
 
 ---
 
@@ -49,28 +48,6 @@ Three methods:
 - All library databases are overwritten automatically
 - **Do not edit files in `%LOCALAPPDATA%\LTspice`** — they may be overwritten on update
 - Store custom files in `Documents\LTspice\` (user library directory)
-
----
-
-## License and Distribution
-
-- **Classification**: EAR99 (no export restrictions)
-- **License**: Non-exclusive, non-transferable for internal use and circuit simulation
-- **Free**: No cost, no license limits
-- **Restrictions**:
-  - No modification, reverse engineering, or decompilation
-  - Not licensed for semiconductor manufacturers for product design/promotion (requires special permission from ADI)
-  - Not suitable for high-risk applications (nuclear, aircraft, life support, weapons, autonomous driving)
-- **Jurisdiction**: Massachusetts, USA
-
-### Third-Party Components
-
-LTspice includes code from:
-- Berkeley SPICE (University of California)
-- NXP MEXTRAM model
-- Hiroshima University HiSIM
-- ZLIB compression
-- SQLiteC++ database
 
 ---
 

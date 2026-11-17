@@ -84,7 +84,7 @@ LTspice.exe "C:\Projects\MyCircuit\filter.asc"
 | [DEVICE-MODELS-GUIDE.md](DEVICE-MODELS-GUIDE.md) | MOSFET/inductor/opamp models, third-party integration |
 | [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md) | .MEAS SQLite database schema, querying results |
 | [MEAS-REFERENCE.md](MEAS-REFERENCE.md) | .MEAS examples for AC and noise, with expected log output |
-| [FAQ-AND-TIPS.md](FAQ-AND-TIPS.md) | Updates, license, Linux, simulation speed, efficiency, SMPS Bode plots |
+| [FAQ-AND-TIPS.md](FAQ-AND-TIPS.md) | Updates, Linux, simulation speed, efficiency, SMPS Bode plots |
 | [ADI-DESIGN-TOOLS-REFERENCE.md](ADI-DESIGN-TOOLS-REFERENCE.md) | ADI upstream design tools (Signal Chain Designer, Filter Wizard, Photodiode Wizard, ADC Driver Tool, LTpowerCAD) that export LTspice schematics |
 
 ---
@@ -6404,28 +6404,6 @@ Three methods:
 - All library databases are overwritten automatically
 - **Do not edit files in `%LOCALAPPDATA%\LTspice`** — they may be overwritten on update
 - Store custom files in `Documents\LTspice\` (user library directory)
-
----
-
-## License and Distribution
-
-- **Classification**: EAR99 (no export restrictions)
-- **License**: Non-exclusive, non-transferable for internal use and circuit simulation
-- **Free**: No cost, no license limits
-- **Restrictions**:
-  - No modification, reverse engineering, or decompilation
-  - Not licensed for semiconductor manufacturers for product design/promotion (requires special permission from ADI)
-  - Not suitable for high-risk applications (nuclear, aircraft, life support, weapons, autonomous driving)
-- **Jurisdiction**: Massachusetts, USA
-
-### Third-Party Components
-
-LTspice includes code from:
-- Berkeley SPICE (University of California)
-- NXP MEXTRAM model
-- Hiroshima University HiSIM
-- ZLIB compression
-- SQLiteC++ database
 
 ---
 
