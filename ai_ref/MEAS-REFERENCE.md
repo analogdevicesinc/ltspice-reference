@@ -1,6 +1,6 @@
 ---
 title: LTspice .MEAS Statement Reference
-description: .MEAS statement examples for AC and noise analysis — complete netlists paired with the log output they produce.
+description: .MEAS statement examples for AC, noise and transient analysis — complete netlists paired with the log output they produce.
 version: "24+"
 ---
 
@@ -19,6 +19,8 @@ This document contains `.MEAS` statement examples for various simulation types.
 - [AC Analysis .MEAS Examples](#ac-analysis-meas-examples)
 - [.MEAS with Noise Analysis - Key Functions](#meas-with-noise-analysis---key-functions)
 - [Noise Analysis .MEAS Examples](#noise-analysis-meas-examples)
+- [.MEAS with Transient Analysis - Key Functions](#meas-with-transient-analysis---key-functions)
+- [Transient Analysis .MEAS Examples](#transient-analysis-meas-examples)
 
 ## How .MEAS Statements Are Executed
 
@@ -777,6 +779,82 @@ low_freq_noise_density: V(onoise) =1.47854748889e-07 at 1
   - Total noise (RSS): √(12.62² + 12.62² + 14.6²) ≈ 22.9 nV/√Hz ✓
 - **At 1 Hz**: 1/f noise dominates with corner at Enk = 100 Hz, increasing total noise to ~148 nV/√Hz
 - All noise sources are referred to output
+
+---
+
+
+## .MEAS with Transient Analysis - Key Functions
+
+### Measurement Operations
+
+| Operation | Description |
+|-----------|-------------|
+| `FIND ... AT=time` | Find value at a specific time |
+| `WHEN condition` | Find the time when the condition is met |
+| `AVG ... FROM=t1 TO=t2` | Average over a time window |
+| `RMS ... FROM=t1 TO=t2` | RMS value over a time window |
+| `PP ... FROM=t1 TO=t2` | Peak-to-peak value over a time window |
+| `MAX` / `MIN` | Maximum / minimum value |
+| `INTEG ... FROM=t1 TO=t2` | Integral over a time window |
+| `PARAM {expr}` | Calculate parameter from measured values |
+
+**Best Practices:**
+- Leave out `FROM`/`TO` to measure over the whole simulation, start-up transient included
+- Start the window after the circuit has settled
+- For a periodic signal, make the window a whole number of periods so the ripple averages out
+
+---
+
+## Transient Analysis .MEAS Examples
+
+1. [Average Output Voltage of a Switching Converter](#average-output-voltage-of-a-switching-converter)
+
+---
+
+### Average Output Voltage of a Switching Converter
+
+**Complete netlist:**
+```spice
+* Open-Loop Buck Converter - Average Output Voltage
+Vin in 0 12
+Vg gate 0 PULSE(0 1 0 10n 10n 0.9u 2u)
+S1 in sw gate 0 SW1
+D1 0 sw DS
+L1 sw out 4.7u
+C1 out 0 10u
+Rload out 0 2.5
+
+.model SW1 SW(Ron=10m Roff=1Meg Vt=0.5)
+.model DS D(Is=1u Rs=10m)
+
+.tran 0 600u 0 10n
+
+* Average over 25 whole switching periods (2us each) to remove the output ripple
+.meas TRAN Vavg AVG V(out) FROM=550u TO=600u
+* For comparison: instantaneous value and peak-to-peak ripple in the same window
+.meas TRAN Vinst FIND V(out) AT=600u
+.meas TRAN Vripple PP V(out) FROM=550u TO=600u
+* Check the output has settled: average over the previous 50us window
+.meas TRAN Vavg_prev AVG V(out) FROM=500u TO=550u
+
+.end
+```
+
+**Expected output (SPICE Output Log):**
+```
+vavg: AVG(V(out))=5.23019451152 FROM 0.00055 TO 0.0006
+vinst: V(out)=5.22835016251 at 0.0006
+vripple: PP(V(out))=0.0334396362305 FROM 0.00055 TO 0.0006
+vavg_prev: AVG(V(out))=5.23020192295 FROM 0.0005 TO 0.00055
+```
+
+**Notes:**
+- A switching converter's output carries ripple at the switching frequency, here 33 mV peak-to-peak at 500 kHz. `AVG` averages it out and gives the DC output voltage
+- `FIND ... AT` returns a single point on the ripple waveform. Here it is 1.8 mV below the average, but depending on where the time falls in the switching cycle it could be off by up to half the peak-to-peak ripple
+- The window spans exactly 25 switching periods (50 µs / 2 µs). A window that ends partway through a period weights part of the ripple twice, which biases the average
+- The window starts at 550 µs, after the start-up transient of the LC output filter has died out. `Vavg_prev` checks this: it averages the previous 50 µs window and agrees with `Vavg` to within 10 µV. If the two averages differ noticeably, the output is still settling, so simulate longer or move the window later
+- The converter runs open loop, so the output is set by the duty cycle: 12 V × 0.45 = 5.4 V, less the diode and switch drops
+- The fourth `.tran` argument (maximum timestep, 10 ns) puts many points in each 2 µs switching period
 
 ---
 
