@@ -339,7 +339,7 @@ Post-processing command to extract measurements from simulation results.
 .meas NOISE total_noise INTEG V(onoise)
 ```
 
-**Worked examples**: [MEAS-REFERENCE.md](MEAS-REFERENCE.md) has complete netlists paired with the log output they produce, covering AC and noise measurements in depth.
+**Worked examples**: [MEAS-REFERENCE.md](MEAS-REFERENCE.md) has complete netlists paired with the log output they produce, covering AC and noise measurements in depth, plus transient averaging.
 
 **Output**: Results in .log file. With `.step`, results form tables. Data saved to SQLite `.db` file (see [MEASURE-DATABASE-REFERENCE.md](MEASURE-DATABASE-REFERENCE.md)).
 
